@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "license": "MIT",
   "dependencies": {
+    "node-rdkafka": "^2.3.3",
     "vorpal": "^1.12.0"
   }
 }
