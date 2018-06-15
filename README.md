@@ -17,3 +17,11 @@
 #### Troubleshooting
 
 - Cluster kubernetes down: juju destroy-model [TAB TAB]
+
+## Contribute
+
+### CLI
+
+- Install build-essentials
+- cd into parts/cli
+- yarn
