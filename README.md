@@ -5,13 +5,11 @@
 ### Operating System
 
 - Download and install Ubuntu 18.04 LTS
+- `git clone https://github.com/alanzanattadev/satellite`
 - `sudo snap install conjure-up --classic`
 - `sudo snap install lxd`
 - `sudo chmod o+rw /var/snap/lxd/common/lxd/unix.socket` (apparently not needed with Ubuntu Server)
-- `/snap/bin/lxd init`
-  - storage type: dir
-  - ipv6 address: none
-  - for everything else keep default configuration
+- `/snap/bin/lxd init --preseed < ./satellite/parts/lxd/config/init-preseed.yaml`
 - For headless Conjure-up configuration, must have a passwordless sudo:
   - With `visudo` change the line `%sudo ALL=(ALL:ALL) ALL` in `%sudo ALL=(ALL:ALL) NOPASSWD:ALL`
 - `conjure-up kubernetes-core localhost` (this will take a lot of time...)
