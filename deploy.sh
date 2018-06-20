@@ -17,21 +17,37 @@ run_cmd() {
     else
         printf "${CYAN}Run: '$1' ${STD}\n"
         sh -c "$1"
-        if [ $? != 0 ]; then
+        RET="$?"
+        if [ $RET != "0" ] && [ "$2" == "" ]; then
             printf "${RED}Command: '$1' failed..${STD}\n"
             printf "${RED}To resume deploy from this step, execute '$0 $ACTUAL_STEP'${STD}\n"
             exit 1
+        elif [ $RET != "0" ]; then
+            printf "${RED}Command: '$1' failed..${STD}\n"
+            printf "${CYAN}Will run '$2' and retry${STD}\n"
+            sh -c "$2"
+            printf "${CYAN}Run: '$1' ${STD}\n"
+            sh -c "$1"
+            if [ $? != 0 ]; then
+                printf "${RED}Command: '$1' failed..${STD}\n"
+                printf "${RED}To resume deploy from this step, execute '$0 $ACTUAL_STEP'${STD}\n"
+                exit 1
+            fi
         fi
     fi
     ACTUAL_STEP=$((ACTUAL_STEP+1))
 }
 
-printf "${GREEN}Start deployment, we will ask your sudo password${STD}\n"
-run_cmd "sudo sh -c \"echo \\\"`whoami` ALL=(ALL:ALL) NOPASSWD:ALL\\\" >> /etc/sudoers\""
+printf "${GREEN}Start deployment, we may ask your sudo password${STD}\n"
+SUDO_LINE="`whoami` ALL=(ALL:ALL) NOPASSWD:ALL"
+ACTUAL_SUDO=$(sudo cat /etc/sudoers | grep "$SUDO_LINE")
+if [[ "$ACTUAL_SUDO" == "" ]]; then
+    run_cmd "sudo sh -c \"echo \\\"$SUDO_LINE\\\" >> /etc/sudoers\""
+fi
+
 run_cmd "sudo snap install conjure-up --classic"
 run_cmd "sudo snap install lxd"
-run_cmd "sudo chmod o+rw /var/snap/lxd/common/lxd/unix.socket"
-run_cmd "/snap/bin/lxd init --preseed < ./parts/lxd/config/init-preseed.yaml"
+run_cmd "/snap/bin/lxd init --preseed < ./parts/lxd/config/init-preseed.yaml" "sudo chmod o+rw /var/snap/lxd/common/lxd/unix.socket"
 run_cmd "conjure-up kubernetes-core localhost"
 run_cmd "juju deploy cs:~hazmat/trusty/kafka-1"
 run_cmd "juju deploy cs:~hazmat/trusty/zookeeper-0"
