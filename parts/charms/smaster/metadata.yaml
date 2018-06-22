@@ -1,0 +1,20 @@
+name: smaster
+summary: Satelite master
+maintainer: prosset
+description: |
+  Used as intermediary with CLI and other components such as Kubernetes.
+tags:
+  # Replace "misc" with one or more whitelisted tags from this list:
+  # https://jujucharms.com/docs/stable/authors-charm-metadata
+  - monitoring
+subordinate: false
+provides:
+  dispatch:
+    interface: http
+requires:
+  messagebroker:
+    interface: kafka
+  graphdb:
+    interface: neo4j
+  kubeworker:
+    interface: kubernetes-master
