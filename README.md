@@ -18,6 +18,13 @@ You can monitor units with `juju status` or via the web gui with `juju gui`.
 
 ### CLI
 
-- Install build-essentials
 - cd into parts/cli
 - yarn
+- yarn start
+
+### Master
+
+- Install build-essentials
+- cd into parts/master
+- yarn
+- yarn start
