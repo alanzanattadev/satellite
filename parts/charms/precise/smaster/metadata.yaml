@@ -16,5 +16,5 @@ requires:
     interface: kafka
   graphdb:
     interface: neo4j
-  kubeworker:
+  kubemaster:
     interface: kubernetes-master

@@ -1,0 +1,5 @@
+#!/bin/bash
+privateAddr=unit-get private-address
+publicAddr=unit-get public-address
+relation-set hostname=privateAddr port=80
+curl --header "Content-Type: application/json" --request POST --data '{"private-address":"${privateAddr}","publicAddr":"${publicAddr}", port:80 }' http://localhost:3000/api/login
