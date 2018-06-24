@@ -1,8 +1,9 @@
 const MongoClient = require('mongodb').MongoClient;
 const scraper = require('./scraper');
 
-const url = 'mongodb://172.16.39.139:27017';
-const dbName = 'instagram';
+const url = 'mongodb://localhost:27017';
+const dbName = 'test';
+const collectionName = 'instagram';
 
 const username = 'paulrosset';
 const credentials = {
@@ -24,7 +25,7 @@ MongoClient.connect(url, (err, client) => {
     //stories: true,
     //posts: true,
   }).then(data => {
-    db.collection('inserts').insertOne(data, (err, r) => {
+    db.collection(collectionName).insertOne(data, (err, r) => {
 
       if (err) { throw err }
       if (!r || r.insertedCount !== 1) {
