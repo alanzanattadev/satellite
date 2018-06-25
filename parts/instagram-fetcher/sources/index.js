@@ -1,14 +1,14 @@
 const MongoClient = require('mongodb').MongoClient;
 const scraper = require('./scraper');
 
-const url = 'mongodb://localhost:27017';
-const dbName = 'test';
-const collectionName = 'instagram';
+const url = process.env.MONGODB_URL || 'mongodb://localhost:27017';
+const dbName = process.env.MONGODB_DBNAME || 'test';
+const collectionName = process.env.MONGODB_COLLECTIONNAME || 'instagram';
 
-const username = 'paulrosset';
+const username = process.argv[2] || 'paulrosset';
 const credentials = {
-  user: 'moboyafe@larjem.com',
-  pass: 'test1234',
+  user: process.env.IG_USERNAME || 'moboyafe@larjem.com',
+  pass: process.env.IG_PASSWORD || 'test1234',
 };
 
 MongoClient.connect(url, (err, client) => {
