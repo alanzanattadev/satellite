@@ -1,3 +1,4 @@
 #!/bin/bash
 set -e
-service apache2 start
+docker run -i -t -d -p 80:8000 supa/smaster
+status-set active "Active Docker container on port 80"
