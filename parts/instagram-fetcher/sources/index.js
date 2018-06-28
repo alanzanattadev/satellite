@@ -1,4 +1,4 @@
-const MongoClient = require('mongodb').MongoClient;
+const { MongoClient } = require('mongodb');
 const scraper = require('./scraper');
 
 const url = process.env.MONGODB_URL || 'mongodb://localhost:27017';
@@ -12,27 +12,26 @@ const credentials = {
 };
 
 MongoClient.connect(url, (err, client) => {
-  if (err) { throw err }
-  console.log("Connected correctly to server");
+  if (err) { throw err; }
+  console.log('Connected correctly to server');
   const db = client.db(dbName);
 
   scraper.getUserData({
     id: username,
     credentials,
-    //followers: true,
-    //following: true,
-    //highlights: true,
-    //stories: true,
-    //posts: true,
-  }).then(data => {
-    db.collection(collectionName).insertOne(data, (err, r) => {
-
-      if (err) { throw err }
+    // followers: true,
+    // following: true,
+    // highlights: true,
+    // stories: true,
+    // posts: true,
+  }).then((data) => {
+    db.collection(collectionName).insertOne(data, (error, r) => {
+      if (error) { throw err; }
       if (!r || r.insertedCount !== 1) {
-        return console.log("Error: not inserted");
+        return console.log('Error: not inserted');
       }
-      console.log("Successfuly inserted");
-      client.close();
+      console.log('Successfuly inserted');
+      return client.close();
     });
   }).catch(console.error);
 });

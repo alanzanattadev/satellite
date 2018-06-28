@@ -1,5 +1,6 @@
 const parser = require('./parsing');
-const { REQUESTFINISHED_EVENT, isXHR, isGraphQLQuery } = require('./utils');
+const { REQUESTFINISHED_EVENT, isXHR, isGraphQLQuery } = require('./common');
+const logger = require('./logger');
 
 const getStoryFromResource = page => new Promise((resolve) => {
   if (!page) {
@@ -7,39 +8,40 @@ const getStoryFromResource = page => new Promise((resolve) => {
   }
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && isGraphQLQuery(res)) {
+      page.removeAllListeners(REQUESTFINISHED_EVENT);
       resolve(parser.parseStories(await res.response().json()));
     }
   });
 });
 
-const HIGHLIGHTS_KEY = 'highlights';
-const PROFILE_KEY = 'profile';
 const STORIES_URL = 'https://www.instagram.com/stories/';
 
 module.exports.getHighlights = async (page, userData) => {
-  if (!page || !userData || !userData[HIGHLIGHTS_KEY]) {
+  if (!page || !userData || !userData.highlights) {
     return null;
   }
-  let highlights = [];
-  for (index in userData[HIGHLIGHTS_KEY]) {
-    const hl = userData[HIGHLIGHTS_KEY][index];
+  logger.verbose(`Get details for ${userData.profile.username}'s highlights`);
+  const highlights = [];
+  for (let index = 0; index < userData.highlights.length; index += 1) {
+    const hl = userData.highlights[index];
     const promise = getStoryFromResource(page);
-    await page.goto(`${STORIES_URL}highlights/${hl['id']}/`);
-    const newData = await promise;
-    page.removeAllListeners(REQUESTFINISHED_EVENT);
-    highlights.push({...hl, ...newData});
+    await page.goto(`${STORIES_URL}highlights/${hl.id}/`);
+    const newHL = await promise;
+    logger.verbose(`Details get for highlight [${index} of ${userData.highlights.length}]`);
+    highlights.push({ ...hl, ...newHL });
   }
   return highlights;
 };
 
 module.exports.getStories = async (page, userData) => {
-  if (!page || !userData || !userData[PROFILE_KEY]) {
+  if (!page || !userData || !userData.profile) {
     return null;
   }
+  const { username } = userData.profile;
+  logger.verbose(`Get details for ${username}'s stories`);
   const promise = getStoryFromResource(page);
-  const username = userData[PROFILE_KEY]['username'];
   await page.goto(`${STORIES_URL}${username}/`);
   const stories = await promise;
-  page.removeAllListeners(REQUESTFINISHED_EVENT);
-  return [ stories ];
-}
+  logger.verbose(`Get ${stories ? stories.medias.length : null} medias for user's stories`);
+  return (stories ? [stories] : null);
+};
