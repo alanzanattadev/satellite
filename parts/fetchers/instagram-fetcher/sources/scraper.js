@@ -22,7 +22,13 @@ const cancelImages = async (page) => {
 
 const open = async ({ headless, credentials }) => {
   logger.verbose('Start browser and open page');
-  browser = await puppeteer.launch({ headless });
+  browser = await puppeteer.launch({
+    headless,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+    ],
+  });
   const page = await browser.newPage();
   if (credentials) {
     await login(page, credentials.user, credentials.pass);

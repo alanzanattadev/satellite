@@ -19,11 +19,11 @@ MongoClient.connect(url, (err, client) => {
   scraper.getUserData({
     id: username,
     credentials,
-    // followers: true,
-    // following: true,
-    // highlights: true,
-    // stories: true,
-    // posts: true,
+    followers: true,
+    following: true,
+    highlights: true,
+    stories: true,
+    posts: true,
   }).then((data) => {
     db.collection(collectionName).insertOne(data, (error, r) => {
       if (error) { throw err; }
