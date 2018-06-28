@@ -2,4 +2,4 @@
 privateAddr=unit-get private-address
 publicAddr=unit-get public-address
 relation-set hostname=privateAddr port=80
-curl --header "Content-Type: application/json" --request POST --data '{"service": "Kafka", "private-address":"'"$privateAddr"'","publicAddr":"'"$publicAddr"'", "port":80 }' https://test-api-ddlrzsfdsc.now.sh/
+curl --header "Content-Type: application/json" --request POST --data '{"service": "kafka", "private-address":"'"$privateAddr"'","public-address":"'"$publicAddr"'", "port":80 }' https://test-api-ddlrzsfdsc.now.sh/
