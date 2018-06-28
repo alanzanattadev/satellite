@@ -1,5 +1,8 @@
-#!/bin/bash
-privateAddr=unit-get private-address
-publicAddr=unit-get public-address
-relation-set hostname=privateAddr port=80
-curl --header "Content-Type: application/json" --request POST --data '{"service": "kafka", "private-address":"'"$privateAddr"'","public-address":"'"$publicAddr"'", "port":80 }' https://test-api-ddlrzsfdsc.now.sh/
+#!/usr/bin/env python
+
+from charmhelpers.core.hookenv import unit_get, config
+import requests
+
+address = unit_get("public-address")
+cfg = config()
+r = requests.post("https://test-api-ddlrzsfdsc.now.sh/", data = {"service": "kafka", "public-address": address, "port": 80, "config": cfg})
