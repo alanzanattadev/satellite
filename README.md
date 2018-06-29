@@ -28,3 +28,10 @@ You can monitor units with `juju status` or via the web gui with `juju gui`.
 - cd into parts/master
 - yarn
 - yarn start
+
+### Instagram fetcher
+
+- Install build-essentials
+- cd into parts/instagram-fetcher
+- yarn
+- yarn start
