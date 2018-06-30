@@ -17,4 +17,6 @@ requires:
   graphdb:
     interface: neo4j
   kubemaster:
-    interface: kubernetes-master
+    interface: kube-control
+  vaultkv:
+    interface: vault
