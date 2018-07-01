@@ -1,3 +1,11 @@
+# SMASTER juju Charm for Satellite project Kent University Summer 2k18
+
+<div align="center">
+  <img width="500" src="./icon.svg" alt="smaster"/>
+</div>
+
+-----
+
 # Overview
 
 Describe the intended usage of this charm and anything unique about how this
