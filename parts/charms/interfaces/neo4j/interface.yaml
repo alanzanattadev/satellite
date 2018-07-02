@@ -1,0 +1,4 @@
+name: neo4j
+summary: Interface passing information for neo4j
+version: 1
+maintainer: Paul Rosset <paulrosset96@gmail.com>

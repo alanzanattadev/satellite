@@ -15,7 +15,7 @@ requires:
   messagebroker:
     interface: kafka
   graphdb:
-    interface: neo4j
+    interface: db-info
   kubemaster:
     interface: kube-control
   vaultkv:
