@@ -8,5 +8,5 @@ address = unit_get("public-address")
 relation = relations()
 idMessageBroker = relation_ids()[0]
 header = {"Content-Type": "application/json"}
-payload = {"service": "neo4j", "public-address": address, "host": json.dumps(relation), "port": idMessageBroker}
+payload = {"service": "neo4j", "public-address": address, "host": relation["graphdb"][idMessageBroker]["neo4j/0"]["private-address"], "port": "default"}
 requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))
