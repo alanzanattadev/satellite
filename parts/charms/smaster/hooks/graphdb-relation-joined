@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from charmhelpers.core.hookenv import unit_get, relations, relation_ids, remote_unit, config
+from charmhelpers.core.hookenv import unit_get, relations, relation_ids, remote_unit
 import requests
 import json
 
@@ -8,7 +8,7 @@ address = unit_get("public-address")
 relation = relations()
 idMessageBroker = relation_ids()[0]
 remoteUnit = remote_unit()
-config = config()
 header = {"Content-Type": "application/json"}
-payload = {"service": "neo4j", "public-address": address, "host": json.dumps(relation), "port": 7474, "test": remoteUnit}
+payload = {"service": "neo4j", "public-address": address, "host": relation["graphdb"][idMessageBroker][remoteUnit]["private-address"], "port": 7474}
 requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))
+
