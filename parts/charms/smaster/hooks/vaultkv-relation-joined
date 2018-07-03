@@ -9,5 +9,5 @@ relation = relations()
 idMessageBroker = relation_ids()[0]
 remoteUnit = remote_unit()
 header = {"Content-Type": "application/json"}
-payload = {"service": "vault", "public-address": address, "host": relation["vaultkv"][idMessageBroker][remoteUnit]["private-address"], "port": json.dumps(relation)}
+payload = {"service": "vault", "public-address": address, "host": relation["vaultkv"][idMessageBroker][remoteUnit]["private-address"], "port": "default-port"}
 requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))
