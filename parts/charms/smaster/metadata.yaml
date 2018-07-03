@@ -19,4 +19,4 @@ requires:
   kubemaster:
     interface: kube-control
   vaultkv:
-    interface: vault
+    interface: vault-kv
