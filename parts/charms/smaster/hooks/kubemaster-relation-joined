@@ -10,4 +10,4 @@ idMessageBroker = relation_ids()[0]
 remoteUnit = remote_unit()
 header = {"Content-Type": "application/json"}
 payload = {"service": "kubernetes-master", "public-address": address, "host": relation["messagebroker"][idMessageBroker][remoteUnit]["private-address"], "port": relation["messagebroker"][idMessageBroker][remoteUnit]["port"]}
-requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload)
+requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))
