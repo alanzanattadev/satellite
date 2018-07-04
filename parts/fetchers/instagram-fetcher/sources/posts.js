@@ -1,6 +1,7 @@
 const parser = require('./parsing');
 const { REQUESTFINISHED_EVENT, isXHR, isGraphQLQuery, scrollDown } = require('./common');
 const logger = require('./logger');
+const saveRaw = require('./raw');
 
 const filterById = (elem, index, self) => index === self.map(e => e.id).indexOf(elem.id);
 
@@ -12,6 +13,7 @@ const getLikes = async (page, shortcode, count) => {
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && isGraphQLQuery(res)) {
       const json = await res.response().json();
+      saveRaw('postlikesresource', shortcode, json);
       const listFromResource = parser.getLikesFromResource(json) || [];
       likes = likes.concat(listFromResource.map(p => parser.parseLike(p)));
       likes = likes.filter(filterById);
@@ -43,13 +45,14 @@ const getLikes = async (page, shortcode, count) => {
   return likes;
 };
 
-const getComments = async (page, count) => {
+const getComments = async (page, count, shortcode) => {
   let comments = [];
   let morePages = true;
   logger.verbose('Start getting comments for post');
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && isGraphQLQuery(res)) {
       const json = await res.response().json();
+      saveRaw('postcommentsresource', shortcode, json);
       const listFromResource = parser.getCommentsFromResource(json) || [];
       comments = comments.concat(listFromResource.map(p => parser.parseComment(p)));
       comments = comments.filter(filterById);
@@ -79,6 +82,7 @@ const getLocationData = async (page, id) => {
     waitUntil: 'domcontentloaded',
   });
   const json = parser.getJSONFromHTML(await page.content());
+  saveRaw('locationpage', id, json);
   return parser.parseLocation(parser.getLocation(json));
 };
 
@@ -93,6 +97,7 @@ const getDataFromPost = async (page, shortcode) => {
     waitUntil: 'domcontentloaded',
   });
   const json = parser.getJSONFromHTML(await page.content());
+  saveRaw('postpage', shortcode, json);
   const newPost = parser.parsePost(parser.getPost(json), true);
   if (newPost === null) {
     return null;
@@ -101,7 +106,8 @@ const getDataFromPost = async (page, shortcode) => {
     newPost.likes = await getLikes(page, newPost.shortcode, newPost.likeCount);
   }
   if (newPost.commentCount > 40) {
-    newPost.comments = newPost.comments.concat(await getComments(page, newPost.commentCount - 40));
+    const newComments = await getComments(page, newPost.commentCount - 40, shortcode);
+    newPost.comments = newPost.comments.concat(newComments);
   }
   if (newPost.location) {
     newPost.location = await getLocationData(page, newPost.location.id);

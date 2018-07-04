@@ -1,8 +1,9 @@
 const parser = require('./parsing');
 const { REQUESTFINISHED_EVENT, isXHR, isGraphQLQuery, scrollDown } = require('./common');
 const logger = require('./logger');
+const saveRaw = require('./raw');
 
-const getAllPosts = async (user, page, postsCount, isPrivate) => {
+const getAllPosts = async (user, page, { postsCount, isPrivate, username }) => {
   let posts = [];
   let morePages = true;
 
@@ -10,6 +11,7 @@ const getAllPosts = async (user, page, postsCount, isPrivate) => {
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && isGraphQLQuery(res)) {
       const json = await res.response().json();
+      saveRaw('userpostsresource', username, json);
       const postsFromResource = parser.getPostsFromResource(json);
       posts = posts.concat(postsFromResource.map(p => parser.parsePost(p)));
 
@@ -38,6 +40,7 @@ const getFollows = async (page, username, followersOrFollowing, count) => {
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && isGraphQLQuery(res)) {
       const json = await res.response().json();
+      saveRaw('userfollowresource', username, json);
       const listFromResource = (
         followersOrFollowing
           ? parser.getFollowersFromResource(json)
@@ -78,13 +81,15 @@ const getFollows = async (page, username, followersOrFollowing, count) => {
   return list;
 };
 
-const getHighlights = page => new Promise((resolve) => {
+const getHighlights = (page, username) => new Promise((resolve) => {
   if (!page) {
     resolve([]);
   }
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && parser.isHighlightResource(res.url())) {
-      const highlightsFromResource = parser.getHighlightsFromResource(await res.response().json());
+      const json = await res.response().json();
+      saveRaw('userhighlightresource', username, json);
+      const highlightsFromResource = parser.getHighlightsFromResource(json);
       page.removeAllListeners(REQUESTFINISHED_EVENT);
 
       logger.verbose(`User's highlights found (${highlightsFromResource.length} items)`);
@@ -107,6 +112,7 @@ module.exports.getData = async (page, { id, followers, following, posts, highlig
   logger.verbose(`Go on user '${id}' profile page`);
   await page.goto(`https://www.instagram.com/${id}/`, { waitUntil: 'networkidle0' });
   const json = parser.getJSONFromHTML(await page.content());
+  saveRaw('userprofilepage', id, json);
   const user = parser.getUser(json);
 
   if (!user) {
@@ -119,7 +125,7 @@ module.exports.getData = async (page, { id, followers, following, posts, highlig
   return {
     profile,
     posts: (posts !== true ? null
-      : await getAllPosts(user, page, profile.postsCount, profile.isPrivate)),
+      : await getAllPosts(user, page, profile)),
     followers: (followers !== true ? null
       : await getFollows(page, id, true, profile.followersCount)),
     following: (following !== true ? null

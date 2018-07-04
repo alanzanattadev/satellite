@@ -20,7 +20,7 @@ const cancelImages = async (page) => {
   });
 };
 
-const open = async ({ headless, credentials }) => {
+const init = async ({ headless, credentials, raw }) => {
   logger.verbose('Start browser and open page');
   browser = await puppeteer.launch({
     headless,
@@ -33,6 +33,8 @@ const open = async ({ headless, credentials }) => {
   if (credentials) {
     await login(page, credentials.user, credentials.pass);
   }
+  await cancelImages(page);
+  process.env.SAVE_RAW_JSON = !!raw;
   return page;
 };
 
@@ -65,8 +67,7 @@ module.exports.getPostData = async (options) => {
     logger.verbose('Missing scraper options');
     return null;
   }
-  const page = await open(options);
-  await cancelImages(page);
+  const page = await init(options);
   logger.info('Get post informations');
   const post = await postsScraper.getDataFromPost(page, options.id);
   await close();
@@ -78,9 +79,7 @@ module.exports.getUserData = async (options) => {
     logger.verbose('Missing scraper options');
     return null;
   }
-  const page = await open(options);
-  await cancelImages(page);
-
+  const page = await init(options);
   logger.info('Get user informations');
   let userData = await userScraper.getData(page, options);
   if (userData) {
