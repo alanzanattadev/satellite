@@ -12,7 +12,7 @@ const getLikes = async (page, shortcode, count) => {
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && isGraphQLQuery(res)) {
       const json = await res.response().json();
-      const listFromResource = parser.getLikesFromResource(json);
+      const listFromResource = parser.getLikesFromResource(json) || [];
       likes = likes.concat(listFromResource.map(p => parser.parseLike(p)));
       likes = likes.filter(filterById);
       logger.verbose(`Likes fetching: ${likes.length} of ${count}`);
@@ -22,10 +22,10 @@ const getLikes = async (page, shortcode, count) => {
   const frame = await page.mainFrame();
   try {
     const selector = parser.getLikesLink(shortcode);
-    await page.waitFor(selector);
+    await page.waitFor(selector, { timeout: 5000 });
     await frame.click(selector);
     const closeSelector = parser.getLikesDivSelector();
-    await page.waitFor(closeSelector);
+    await page.waitFor(closeSelector, { timeout: 3000 });
     await frame.click(closeSelector);
   } catch (err) {
     logger.error('Cannot get likes, try to login (maybe the account is private)');
@@ -50,7 +50,7 @@ const getComments = async (page, count) => {
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && isGraphQLQuery(res)) {
       const json = await res.response().json();
-      const listFromResource = parser.getCommentsFromResource(json);
+      const listFromResource = parser.getCommentsFromResource(json) || [];
       comments = comments.concat(listFromResource.map(p => parser.parseComment(p)));
       comments = comments.filter(filterById);
       logger.verbose(`Comments fetching: ${comments.length} of ${count}`);
@@ -85,13 +85,18 @@ const getLocationData = async (page, id) => {
 const POSTS_URL = 'https://www.instagram.com/p/';
 
 const getDataFromPost = async (page, shortcode) => {
+  if (!page || !shortcode) {
+    return null;
+  }
   logger.verbose(`Get details for post '${shortcode}'`);
   await page.goto(`${POSTS_URL}${shortcode}/`, {
     waitUntil: 'domcontentloaded',
   });
   const json = parser.getJSONFromHTML(await page.content());
-
   const newPost = parser.parsePost(parser.getPost(json), true);
+  if (newPost === null) {
+    return null;
+  }
   if (newPost.type !== 'video' && newPost.likeCount > 10) {
     newPost.likes = await getLikes(page, newPost.shortcode, newPost.likeCount);
   }
@@ -114,7 +119,7 @@ module.exports.getDataFromPosts = async (page, userData) => {
 
   for (let index = 0; index < userData.posts.length; index += 1) {
     posts.push(await getDataFromPost(page, userData.posts[index].shortcode));
-    logger.verbose(`Details get for ${userData.profile.username}'s post \
+    logger.verbose(`Details get for ${(userData.profile || {}).username}'s post \
 '${userData.posts[index].shortcode}' [${index} of ${userData.posts.length}]`);
   }
   return posts;

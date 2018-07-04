@@ -11,7 +11,7 @@ const typeOptions = { delay: 50 };
 
 module.exports.login = async (page, username, password) => {
   if (!page || !username || !password) {
-    return;
+    return false;
   }
   logger.info(`Login with the user '${username}'`);
   try {
@@ -22,7 +22,9 @@ module.exports.login = async (page, username, password) => {
     await frame.click(LOGIN_BUTTON_SELECTOR);
     await page.waitForNavigation(waitOptions);
     logger.verbose('Successfully logged in');
+    return true;
   } catch (err) {
     logger.warn(`Failed to login with user '${username}'`);
   }
+  return false;
 };
