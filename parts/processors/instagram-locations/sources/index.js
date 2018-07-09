@@ -10,7 +10,7 @@ const username = process.env.IG_USERID;
 
 const findInput = db => new Promise((resolve, reject) => db
   .collection(inputCollectionName)
-  .find(username, (err, data) => (err ? reject(err) : resolve(data))));
+  .find({ 'profile.username': username }, (err, data) => (err ? reject(err) : resolve(data))));
 
 const insertOutput = (db, json) => new Promise((resolve, reject) => db
   .collection(outputCollectionName)
