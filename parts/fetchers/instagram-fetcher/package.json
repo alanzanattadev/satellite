@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "start": "node ./sources/main.js",
-    "test": "eslint ./sources/*.js && jest"
+    "test": "eslint ./sources/*.js && jest",
+    "eslint": "eslint ./sources/*.js"
   },
   "dependencies": {
     "mongodb": "^3.0.10",
