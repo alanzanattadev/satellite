@@ -10,7 +10,7 @@ const username = process.env.IG_USERID;
 
 const findInput = db => new Promise((resolve, reject) => db
   .collection(inputCollectionName)
-  .find({ 'profile.username': username }, (err, data) => (err ? reject(err) : resolve(data))));
+  .findOne({ 'profile.username': username }, (err, data) => (err ? reject(err) : resolve(data))));
 
 const insertOutput = (db, json) => new Promise((resolve, reject) => db
   .collection(outputCollectionName)
@@ -29,15 +29,20 @@ const insertOutput = (db, json) => new Promise((resolve, reject) => db
 
     try {
       const json = await findInput(db);
-      const array = await Promise.all(json.posts.map(async (e) => {
-        const possibleLocations = await getLocationFromText(e.text);
-        return { ...e, possibleLocations };
-      }));
-      const res = await insertOutput(db, { ...json, posts: array });
-      if (!res) {
-        logger.error('Error during insertion in mongodb collection');
+      if (json && json.posts && json.posts.length > 0) {
+        logger.info(`Start guessing location for ${json.posts.length} posts`);
+        const array = await Promise.all(json.posts.map(async (e) => {
+          const possibleLocations = await getLocationFromText(e.text);
+          return { ...e, possibleLocations };
+        }));
+        const res = await insertOutput(db, { ...json, posts: array });
+        if (!res) {
+          logger.error('Error during insertion in mongodb collection');
+        } else {
+          logger.info('Data succefully stored');
+        }
       } else {
-        logger.info('Data succefully stored');
+        logger.warn('There is no posts to analyse..');
       }
     } catch (error) {
       logger.error(error);
