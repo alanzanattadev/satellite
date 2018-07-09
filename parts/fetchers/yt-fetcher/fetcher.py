@@ -11,11 +11,16 @@ class YTFetcher():
         self.apiKey = apiKey
         self.ytUsername = ytUsername
         self.channelID = None
-        self.client = pymongo.MongoClient(
-            "localhost", 27017)  # Mettre variable d'env
-        self.db = self.client["test-ytFetcher"]
-        self.subscription = self.db["subscriptions"]
-        self.playlists = self.db["playlists"]
+        self.playlistsIds = []
+        try:
+            self.client = pymongo.MongoClient(
+                "localhost", 27017)  # Mettre variable d'env
+            self.db = self.client["test-ytFetcher"]
+            self.subscription = self.db["subscriptions"]
+            self.playlists = self.db["playlists"]
+            self.playlistsItems = self.db["playlistsItems"]
+        except Exception as err:
+            print "Error when setting up the database", err
 
     def getChannelID(self):
         try:
@@ -52,6 +57,8 @@ class YTFetcher():
                     else:
                         isNextPage = False
                     for item in data["items"]:
+                        if typeFetching == "playlists":
+                            self.playlistsIds.append(item["id"])
                         insertOne(item["snippet"], collectionDep)
                         itemsNb += 1
                         print "Entry added " + str(itemsNb)
@@ -62,10 +69,41 @@ class YTFetcher():
         except Exception as err:
             print err
 
-    def fetcherPlaylistMusic(self, collectionDep, maxResultsPerPage=10):
+    def fetcherPlaylistMusic(self, maxResultsPerPage=10):
+        try:
+            isNextPage = True
+            pageNb = 0
+            itemsNb = 0
+            payload = {"key": self.apiKey, "playlistId": "",
+                       "part": "snippet", "maxResults": maxResultsPerPage}
+            for playlistId in self.playlistsIds:
+                isNextPage = True
+                payload["playlistId"] = playlistId
+                while isNextPage:
+                    r = requests.get(
+                        "https://www.googleapis.com/youtube/v3/playlistItems", params=payload)
+                    data = json.loads(r.content)
+                    if r.status_code == 200:
+                        pageNb += 1
+                        if "nextPageToken" in data:
+                            nextPageToken = data["nextPageToken"]
+                            payload["pageToken"] = nextPageToken
+                        else:
+                            isNextPage = False
+                        for item in data["items"]:
+                            insertOne(item["snippet"], self.playlistsItems)
+                            itemsNb += 1
+                            print "Entry added " + str(itemsNb)
+                        print "Fetched page: " + str(pageNb)
+                    else:
+                        raise Exception(
+                            "Error while fetching, if you have a custom channelId make sure to call getChannelId() method!")
+        except Exception as err:
+            print err
 
 
 fetch = YTFetcher("AIzaSyCvJT0slEo5IYSbeEd1UeJJVw9vO3vlMLc",
                   "XTRSilent")
 fetch.getChannelID()
 fetch.fetcher("playlists", fetch.playlists, 5)
+fetch.fetcherPlaylistMusic()
