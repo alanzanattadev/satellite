@@ -100,10 +100,3 @@ class YTFetcher():
                             "Error while fetching, if you have a custom channelId make sure to call getChannelId() method!")
         except Exception as err:
             print err
-
-
-fetch = YTFetcher("AIzaSyCvJT0slEo5IYSbeEd1UeJJVw9vO3vlMLc",
-                  "XTRSilent")
-fetch.getChannelID()
-fetch.fetcher("playlists", fetch.playlists, 5)
-fetch.fetcherPlaylistMusic()
