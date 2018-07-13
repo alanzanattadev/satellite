@@ -5,6 +5,7 @@ from twitterscraper import query_tweets
 import json
 from pymongo import MongoClient
 import argparse
+import os
 
 
 def fetch(opts):
@@ -30,14 +31,15 @@ def main():
     parser.add_argument("twitterUser", type=str, help="Twitter ID")
     parser.add_argument("-l", "--limit", type=int,
                         help="Limit of tweet that have to be scraped, tweet are retrieved in batches of 20, default: 20", default=20)
-    parser.add_argument("-u", "--url", type=str,
-                        help="Url of the connection mongoDB, default: mongodb://localhost:27017/", default="mongodb://localhost:27017/")
-    parser.add_argument("-d", "--database", type=str,
-                        help="Name of the database to put the information in it, default: twitter_database", default="twitter_database")
-    parser.add_argument("-c", "--collection", type=str,
-                        help="Name of the collection to put the information in it, default: twitter_collection", default="twitter_collection")
+    mongo_host = os.environ.get("MONGO_HOST", "localhost")
+    mongo_port = os.environ.get("MONGO_PORT", 27017)
+    mongo_database = os.environ.get(
+        "MONGO_TWITTER_DATABASE", "twitter_database")
+    mongo_collection = os.environ.get(
+        "MONGO_TWITTER_COLLECTION", "twitter_collection")
     args = parser.parse_args()
-    client = MongoClient(args.url)[args.database][args.collection]
+    client = MongoClient(mongo_host, mongo_port)[
+        mongo_database][mongo_collection]
     fetch({
         "twitterUser": args.twitterUser,
         "limit": args.limit,

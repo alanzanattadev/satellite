@@ -10,8 +10,7 @@ Using an existing (Tweeter Python Scraper)[https://github.com/taspinar/twittersc
 ### CLI Tweeter Scraper
 
 ```bash
-usage: main.py [-h] [-l LIMIT] [-u URL] [-d DATABASE] [-c COLLECTION]
-               twitterUser
+usage: main.py [-h] [-l LIMIT] twitterUser
 
 positional arguments:
   twitterUser           Twitter ID
@@ -21,12 +20,17 @@ optional arguments:
   -l LIMIT, --limit LIMIT
                         Limit of tweet that have to be scraped, tweet are
                         retrieved in batches of 20, default: 20
-  -u URL, --url URL     Url of the connection mongoDB, default:
-                        mongodb://localhost:27017/
-  -d DATABASE, --database DATABASE
-                        Name of the database to put the information in it,
-                        default: twitter_database
-  -c COLLECTION, --collection COLLECTION
-                        Name of the collection to put the information in it,
-                        default: twitter_collection
 ```
+
+### Connection to mongoDB
+
+Fill the following env variables to connect to mongoDB:
+
+- `MONGO_HOST`
+  - default: `localhost`
+- `MONGO_PORT`
+  - default: `27017`
+- `MONGO_TWITTER_DATABASE`
+  - default: `twitter_database`
+- `MONGO_TWITTER_COLLECTION`
+  - default: `twitter_collection`
