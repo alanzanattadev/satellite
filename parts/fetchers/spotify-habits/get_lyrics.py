@@ -2,6 +2,8 @@
 import sys
 import os
 import lyricwikia
+import http.client
+import json
 from pymongo import MongoClient
 
 if __name__ == '__main__':
@@ -34,6 +36,7 @@ if __name__ == '__main__':
 
     # Lyrics fetching
     cursor = songs_collection.find({'user_id': username})
+    conn = http.client.HTTPSConnection("api.lyrics.ovh")
     for doc in cursor:
         artist = doc['song_artist']
         name = doc['song_name']
@@ -54,7 +57,28 @@ if __name__ == '__main__':
                 'lyrics': lyrics
             })
         except:
-            print("... Not found")
+            print("... Not found, trying on lyrics.ovh")
+            conn = http.client.HTTPConnection("api.lyrics.ovh")
+            try:
+                conn.request("GET", "/v1/%s/%s" % (artist, name))
+                response = conn.getresponse()
+                if response.code == 200:
+                    data = response.read()
+                    content = json.loads(data)
+                    lyrics = content['lyrics']
+                    print("... Lyrics Found !")
+                    lyrics_collection.insert_one({
+                        'song_name': name,
+                        'song_artist': artist,
+                        'user_id': username,
+                        'lyrics': lyrics
+                    })
+                else:
+                    print("... Not found")
+            except:
+                print("... Not english")
 
+    # Clean network
+    conn.close()
     # Clean database
     lyrics_collection.delete_many({'lyrics': {'$regex': 'ERROR:.*'}})
