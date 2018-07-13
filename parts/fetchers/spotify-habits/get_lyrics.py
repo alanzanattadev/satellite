@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os
-import subprocess
+import lyricwikia
 from pymongo import MongoClient
 
 if __name__ == '__main__':
@@ -44,25 +44,16 @@ if __name__ == '__main__':
         })
         # Fetch lyrics
         print("=> Fetching lyrics of: %s - %s" % (artist, name))
-        completed_process = subprocess.Popen(
-            ["lyrics", artist, name],
-            stdout=subprocess.PIPE
-        )
-        output = completed_process.communicate()[0].decode(
-            'utf-8',
-            errors='ignore'
-        )
-        if "ERROR: Cannot download lyrics" not in output:
+        try:
+            lyrics = lyricwikia.get_lyrics(artist, name)
             print("... Lyrics Found !")
-            lyrics = output
-            # Save lyrics
             lyrics_collection.insert_one({
                 'song_name': name,
                 'song_artist': artist,
                 'user_id': username,
                 'lyrics': lyrics
             })
-        else:
+        except:
             print("... Not found")
 
     # Clean database
