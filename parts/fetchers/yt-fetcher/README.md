@@ -7,9 +7,18 @@
 
 ### Additional informations needed
 
-- [Google ApiKey](https://console.cloud.google.com/apis/credentials?pli=1&project=dulcet-order-153315&folder&organizationId) for *Youtube Data API v3*
+- [Google ApiKey](https://console.cloud.google.com/apis/credentials?pli=1&project=dulcet-order-153315&folder&organizationId) for _Youtube Data API v3_
 - Mongodb server up and running
 - Informations of connection through mongoDB database (Still hard coded **TODO**)
+
+### Env variables
+
+- `MONGO_YT_HOST`: Host for database mongodb
+  - default: `localhost`
+- `MONGO_YT_PORT`: Port for database mongodb
+  - default: `27017`
+- `MONGO_YT_DB`: Name for the database
+  - default: `yt_db`
 
 ### Features
 
@@ -21,24 +30,17 @@
 ### API
 
 - `YTFetcher` class
-    - `YTFetcher()`: Input
-        - `apiKey`: string, Your api Key that google give you
-        - `ytUsername`: string, Your youtube username or your channelId if you don't have any username
-        Also provides:
-            - `channelID`: string, once call `getChannelID()`
-            - `client`: db, client mongodb
-            - `db`: db, database connection mongodb
-            - `subscriptions`: connection, database connection to the collection `subscriptions`
-            - `playlists`: connection, database connection to the collection `playlists`
-            - `playlistsItems`: connection, database connection to the collection `playlistsItems` 
-            - `playlistsIds`: Array<string>, every Id of the playlist create by the user
-    - `getChannelID()`: return your channelID given your `ytUsername`, **only if you don't already have your channelID**
-    - `fetcher()`: Input
-        - `typeFetching`: string, either be `subscriptions` or `playlists`, fetch data either about subscriptions or playlist.
-        - `collectionDep`: db.collection, Colletion used to insert in mongodb platform, variable are already populated, `self.subscription` || `self.playlists`
-        - `maxResultsPerPage`: Number, Optional, number of entry per page fetch.
-    - `fetcherPlaylistMusic()`: Input
-        - `maxResultsPerPage`: Number, *Optional*, number of entry per page fetch.
+  - `YTFetcher()`: Input
+    - `apiKey`: string, Your api Key that google give you
+    - `ytUsername`: string, Your youtube username or your channelId if you don't have any username
+      Also provides: - `channelID`: string, once call `getChannelID()` - `client`: db, client mongodb - `db`: db, database connection mongodb - `subscriptions`: connection, database connection to the collection `subscriptions` - `playlists`: connection, database connection to the collection `playlists` - `playlistsItems`: connection, database connection to the collection `playlistsItems` - `playlistsIds`: Array<string>, every Id of the playlist create by the user
+  - `getChannelID()`: return your channelID given your `ytUsername`, **only if you don't already have your channelID**
+  - `fetcher()`: Input
+    - `typeFetching`: string, either be `subscriptions` or `playlists`, fetch data either about subscriptions or playlist.
+    - `collectionDep`: db.collection, Colletion used to insert in mongodb platform, variable are already populated, `self.subscription` || `self.playlists`
+    - `maxResultsPerPage`: Number, Optional, number of entry per page fetch.
+  - `fetcherPlaylistMusic()`: Input
+    - `maxResultsPerPage`: Number, _Optional_, number of entry per page fetch.
 
 ### Discuss Implementation (API)
 
@@ -56,6 +58,6 @@
 ```python
 fetch = YTFetcher(os.environ["APIKEY"], os.environ["YTUSERNAME"]) # Instanciate the fetcher with APIKEY provided by google and the YTUSERNAME that you provide
 fetch.getChannelID() # If and only if you don't already have the channelID.
-fetch.fetcher("playlists", fetch.playlists, 5) # Fetch the different playlists 
+fetch.fetcher("playlists", fetch.playlists, 5) # Fetch the different playlists
 fetch.fetcherPlaylistMusic() # Fetch the different musics present in these playlists
 ```

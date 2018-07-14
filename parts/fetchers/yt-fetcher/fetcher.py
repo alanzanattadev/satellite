@@ -3,6 +3,7 @@
 import requests
 import json
 import pymongo
+import os
 from utils import insertOne
 
 
@@ -14,13 +15,13 @@ class YTFetcher():
         self.playlistsIds = []
         try:
             self.client = pymongo.MongoClient(
-                "localhost", 27017)  # Mettre variable d'env
-            self.db = self.client["test-ytFetcher"]
-            self.subscription = self.db["subscriptions"]
-            self.playlists = self.db["playlists"]
-            self.playlistsItems = self.db["playlistsItems"]
+                os.environ.get("MONGO_YT_HOST", "localhost"), os.environ.get("MONGO_YT_PORT", 27017))
         except Exception as err:
             print "Error when setting up the database", err
+        self.db = self.client[os.environ.get("MONGO_YT_DB", "yt_db")]
+        self.subscription = self.db["subscriptions"]
+        self.playlists = self.db["playlists"]
+        self.playlistsItems = self.db["playlistsItems"]
 
     def getChannelID(self):
         try:
