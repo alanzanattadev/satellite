@@ -58,7 +58,6 @@ if __name__ == '__main__':
             })
         except:
             print("... Not found, trying on lyrics.ovh")
-            conn = http.client.HTTPConnection("api.lyrics.ovh")
             try:
                 conn.request("GET", "/v1/%s/%s" % (artist, name))
                 response = conn.getresponse()
