@@ -17,12 +17,14 @@ def fetch_and_save_playlist(tracks, collection, username):
             artists,
             ""
         )
+        spotify_id = track['id']
         print(" ... => Fetching: %s - %s" % (full_artist_name, song_name))
         collection.insert_one({
             'song_artist': full_artist_name,
             'song_name': song_name,
             'user_id': username,
-            'playlist_id': playlist['id']
+            'playlist_id': playlist['id'],
+            'spotify_id': spotify_id
         })
 
 
