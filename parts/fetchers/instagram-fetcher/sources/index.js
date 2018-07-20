@@ -34,7 +34,7 @@ const credentials = {
       stories: true,
       posts: true,
     }).then((data) => {
-      db.collection(collectionName).insertOne(data, (error, r) => {
+      db.collection(collectionName).replaceOne({ 'profile.username': username }, data, { upsert: true }, (error, r) => {
         if (error) { throw err; }
         if (!r || r.insertedCount !== 1) {
           return logger.error('Error during insertion in mongodb collection');
