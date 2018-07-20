@@ -20,9 +20,10 @@ def fetch(opts):
             "timestamp": tweet.timestamp,
             "user": tweet.user
         }
-        post_id = opts["mongoClient"].insert_one(post).inserted_id
-        tweets.append(post)
-        print("INFO: Tweet " + str(post_id) + " inserted in database.")
+        if not opts["mongoClient"].find_one({"text": tweet.text.encode('ascii', 'ignore').decode('ascii')}):
+            post_id = opts["mongoClient"].insert_one(post).inserted_id
+            tweets.append(post)
+            print("INFO: Tweet " + str(post_id) + " inserted in database.")
     return tweets
 
 
