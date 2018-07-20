@@ -13,11 +13,11 @@ def fetch(opts):
     for tweet in query_tweets(opts["twitterUser"], opts["limit"]):
         post = {
             "_id": tweet.id,
-            "fullname": tweet.fullname.encode('ascii', 'ignore').decode('ascii'),
+            "fullname": tweet.fullname.encode("UTF-8", "ignore").decode(),
             "likes": tweet.likes,
             "replies": tweet.replies,
             "retweets": tweet.retweets,
-            "text": tweet.text.encode('ascii', 'ignore').decode('ascii'),
+            "text": tweet.text.encode("UTF-8", 'ignore').decode(),
             "timestamp": tweet.timestamp,
             "user": tweet.user
         }
