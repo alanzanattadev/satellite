@@ -12,6 +12,7 @@ def fetch(opts):
     tweets = []
     for tweet in query_tweets(opts["twitterUser"], opts["limit"]):
         post = {
+            "_id": tweet.id,
             "fullname": tweet.fullname.encode('ascii', 'ignore').decode('ascii'),
             "likes": tweet.likes,
             "replies": tweet.replies,
@@ -20,10 +21,10 @@ def fetch(opts):
             "timestamp": tweet.timestamp,
             "user": tweet.user
         }
-        if not opts["mongoClient"].find_one({"text": tweet.text.encode('ascii', 'ignore').decode('ascii')}):
-            post_id = opts["mongoClient"].insert_one(post).inserted_id
-            tweets.append(post)
-            print("INFO: Tweet " + str(post_id) + " inserted in database.")
+        opts["mongoClient"].replace_one(
+            {"_id": tweet.id}, post, upsert=True)
+        tweets.append(post)
+        print("INFO: Tweet inserted in database.")
     return tweets
 
 
