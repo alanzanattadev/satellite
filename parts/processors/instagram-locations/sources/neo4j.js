@@ -20,9 +20,10 @@ const updateOrCreateProfile = async (session, { profile }) => {
 };
 
 const insertLocation = async (session, location, username) => {
-  const request = 'MATCH (user:Instagram { username: {username} }\
-  CREATE (user)-[r:LOCATED]->(location:Location {location}) RETURN location.name';
+  const request = 'MATCH (user:Instagram { username: {username} })\
+  CREATE (user)-[r:LOCATED { at: {location.time} }]->(location:Location {location}) RETURN location.name';
   try {
+    console.log(location);
     const result = await session.run(request, { username, location });
     return (result.records.length === 1);
   } catch (error) {
@@ -52,7 +53,7 @@ const addLocations = async (session, { profile, posts }) => posts.reduce(async (
 }, true);
 
 module.exports = async (json) => {
-  const driver = neo4j.driver(neo4jUrl, neo4j.auth.basic('neo4j', 'neo4j'));
+  const driver = neo4j.driver(neo4jUrl, neo4j.auth.basic('neo4j', 'test'));
   const session = driver.session();
   const ret = (
     await updateOrCreateProfile(session, json)
