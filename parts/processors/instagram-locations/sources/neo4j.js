@@ -19,12 +19,13 @@ const updateOrCreateProfile = async (session, { profile }) => {
   return false;
 };
 
-const insertLocation = async (session, location, username) => {
+const insertLocation = async (session, location, time, userDefined, username) => {
   const request = 'MATCH (user:Instagram { username: {username} })\
-  CREATE (user)-[r:LOCATED { at: {location.time} }]->(location:Location {location}) RETURN location.name';
+  CREATE (user)-[r:LOCATED { time: {time}, userDefined: {userDefined} }]->(location:Location {location})\
+  RETURN location.name';
   try {
     console.log(location);
-    const result = await session.run(request, { username, location });
+    const result = await session.run(request, { username, location, time, userDefined });
     return (result.records.length === 1);
   } catch (error) {
     logger.error(error);
@@ -34,17 +35,9 @@ const insertLocation = async (session, location, username) => {
 
 const addLocations = async (session, { profile, posts }) => posts.reduce(async (ret, post) => {
   const { time } = post;
-  const locationRet = await insertLocation(session, {
-    ...post.location,
-    time,
-    userDefined: true,
-  }, profile.username);
+  const locationRet = await insertLocation(session, post.location, time, true, profile.username);
   const pRet = post.possibleLocations.reduce(async (possibleRet, possibleLocation) => {
-    if (await insertLocation(session, {
-      ...possibleLocation,
-      time,
-      userDefined: false,
-    }, profile.username) === false) {
+    if (await insertLocation(session, possibleLocation, time, false, profile.username) === false) {
       return false;
     }
     return possibleRet;
