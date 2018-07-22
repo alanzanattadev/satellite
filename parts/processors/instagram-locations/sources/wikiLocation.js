@@ -12,7 +12,7 @@ const getLocation = async location => new Promise((resolve) => {
     const $ = cheerio.load(html);
     const coordArray = $(GEO_SELECTOR).text().split(GEO_SEPARATOR);
     return resolve(coordArray.length !== 2 ? null : {
-      location,
+      name: location,
       lat: coordArray[0],
       lng: coordArray[1],
     });

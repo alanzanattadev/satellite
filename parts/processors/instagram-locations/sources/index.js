@@ -1,20 +1,17 @@
 const { MongoClient } = require('mongodb');
 const logger = require('./logger');
 const { getLocationFromText } = require('./wikiLocation');
+const insertOutput = require('./neo4j');
 
 const url = process.env.MONGODB_URL || 'mongodb://localhost:27017';
 const dbName = process.env.MONGODB_DBNAME || 'test';
 const inputCollectionName = process.env.MONGODB_INPUT_COLLECTIONNAME || 'instagram';
-const outputCollectionName = process.env.MONGODB_OUTPUT_COLLECTIONNAME || 'instagram-location';
 const username = process.env.IG_USERID;
+
 
 const findInput = db => new Promise((resolve, reject) => db
   .collection(inputCollectionName)
   .findOne({ 'profile.username': username }, (err, data) => (err ? reject(err) : resolve(data))));
-
-const insertOutput = (db, json) => new Promise((resolve, reject) => db
-  .collection(outputCollectionName)
-  .insertOne(json, (err, data) => (err ? reject(err) : resolve(data.insertedCount === 1))));
 
 (() => {
   if (!username) {
@@ -35,7 +32,7 @@ const insertOutput = (db, json) => new Promise((resolve, reject) => db
           const possibleLocations = await getLocationFromText(e.text);
           return { ...e, possibleLocations };
         }));
-        const res = await insertOutput(db, { ...json, posts: array });
+        const res = await insertOutput({ ...json, posts: array });
         if (!res) {
           logger.error('Error during insertion in mongodb collection');
         } else {
