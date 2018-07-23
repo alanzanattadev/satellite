@@ -32,9 +32,10 @@ const findInput = db => new Promise((resolve, reject) => db
           const possibleLocations = await getLocationFromText(e.text);
           return { ...e, possibleLocations };
         }));
+        logger.debug('Insert locations in neo4j');
         const res = await insertOutput({ ...json, posts: array });
         if (!res) {
-          logger.error('Error during insertion in mongodb collection');
+          logger.error('Error during insertion in neo4j');
         } else {
           logger.info('Data succefully stored');
         }
