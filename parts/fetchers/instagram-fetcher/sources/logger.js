@@ -7,7 +7,7 @@ const logFormat = printf(info => `${info.timestamp} [${info.level.toUpperCase()}
 // const filename = path.join(__dirname, 'instagram-scraper.log');
 
 module.exports = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'infos',
+  level: process.env.LOG_LEVEL || 'info',
   format: combine(timestamp(), logFormat),
   transports: [
     new winston.transports.Console(),
