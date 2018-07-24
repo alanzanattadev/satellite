@@ -8,7 +8,7 @@ const WORDS_SEPARATOR = /[\s,#]+/;
 
 const getLocation = async location => new Promise((resolve) => {
   const url = `${BASE_URL}${location}`;
-  return rp({ url }).then((html) => {
+  return rp({ url, timeout: 120000 }).then((html) => {
     const $ = cheerio.load(html);
     const coordArray = $(GEO_SELECTOR).text().split(GEO_SEPARATOR);
     return resolve(coordArray.length !== 2 ? null : {

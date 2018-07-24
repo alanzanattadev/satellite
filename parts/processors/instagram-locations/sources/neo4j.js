@@ -24,7 +24,6 @@ const insertLocation = async (session, location, time, userDefined, username) =>
   CREATE (user)-[r:LOCATED { time: {time}, userDefined: {userDefined} }]->(location:Location {location})\
   RETURN location.name';
   try {
-    console.log(location);
     const result = await session.run(request, { username, location, time, userDefined });
     return (result.records.length === 1);
   } catch (error) {
@@ -35,7 +34,8 @@ const insertLocation = async (session, location, time, userDefined, username) =>
 
 const addLocations = async (session, { profile, posts }) => posts.reduce(async (ret, post) => {
   const { time } = post;
-  const locationRet = await insertLocation(session, post.location, time, true, profile.username);
+  const locationRet = (!post.location ? true
+    : await insertLocation(session, post.location, time, true, profile.username));
   const pRet = post.possibleLocations.reduce(async (possibleRet, possibleLocation) => {
     if (await insertLocation(session, possibleLocation, time, false, profile.username) === false) {
       return false;
