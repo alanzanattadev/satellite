@@ -3,6 +3,8 @@
 ### Install dependencies
 
 - pymongo (`pip install pymongo`)
+- langdetect
+- textblob
 
 ### Connection to mongoDB
 

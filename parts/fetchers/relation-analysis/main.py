@@ -4,8 +4,11 @@ from pymongo import MongoClient
 from textblob import TextBlob
 from langdetect import detect
 from datetime import datetime
+import functools
 import os
 import re
+import operator
+from collections import OrderedDict
 
 
 class TwitterAnalysis:
@@ -79,10 +82,49 @@ class TwitterAnalysis:
         tweet = re.sub(r'\bcoo+\b', 'cool', tweet)
         return tweet
 
+    def setProfile(self, entryProcessed, x):
+        profile = {
+            "neutral": lambda x: x + 1,
+            "positive": lambda x: x + 1,
+            "negative": lambda x: x + 1,
+        }
+        return profile[entryProcessed](x)
+
+    def checkRelationsOnCreatorTweet(self, tweet, object, ownerOfTheSetOfTweet):
+        ownerOfTweet = tweet["owner"]
+        if ownerOfTweet != ownerOfTheSetOfTweet:
+            if not ownerOfTweet in object["relations"]:
+                object["relations"][ownerOfTweet] = 1
+            else:
+                object["relations"][ownerOfTweet] = object["relations"][ownerOfTweet] + 1
+
+    def checkRelationOnTagUser(self, tweet, object, ownerOfTheSetOfTweet):
+        for tag_user in tweet["tag_user"]:
+            if tag_user != ownerOfTheSetOfTweet:
+                if not tag_user in object["relations"]:
+                    object["relations"][tag_user] = 1
+                else:
+                    object["relations"][tag_user] = object["relations"][tag_user] + 1
+
+    def mapReduceOnEachTweet(self, ownerOfTheSetOfTweet, filter={}):
+        setOfTweet = self.clientDest.find(filter)
+        profile = {
+            "relations": {}
+        }
+        for tweetEntry in setOfTweet:
+            self.checkRelationsOnCreatorTweet(
+                tweetEntry, profile, ownerOfTheSetOfTweet)
+            self.checkRelationOnTagUser(
+                tweetEntry, profile, ownerOfTheSetOfTweet)
+        profile["relations"] = dict((x, y) for x, y in sorted(
+            profile["relations"].items(), key=lambda x: x[1], reverse=True))  # Relations with people
+        print(profile)
+
 
 if __name__ == "__main__":
     analysis = TwitterAnalysis()
-    analysis.textProcOnTweet()
+    analysis.mapReduceOnEachTweet("RossetPaul")
+    # analysis.textProcOnTweet()
 
     # print(analysis.data)
     # print(analysis.client)
