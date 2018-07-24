@@ -106,16 +106,25 @@ class TwitterAnalysis:
                 else:
                     object["relations"][tag_user] = object["relations"][tag_user] + 1
 
+    def checkSentiment(self, tweet, object):
+        sentiment = tweet["sentiment"]
+        if not sentiment in object["sentiment"]:
+            object["sentiment"][sentiment] = 1
+        else:
+            object["sentiment"][sentiment] = object["sentiment"][sentiment] + 1
+
     def mapReduceOnEachTweet(self, ownerOfTheSetOfTweet, filter={}):
         setOfTweet = self.clientDest.find(filter)
         profile = {
-            "relations": {}
+            "relations": {},
+            "sentiment": {}
         }
         for tweetEntry in setOfTweet:
             self.checkRelationsOnCreatorTweet(
                 tweetEntry, profile, ownerOfTheSetOfTweet)
             self.checkRelationOnTagUser(
                 tweetEntry, profile, ownerOfTheSetOfTweet)
+            self.checkSentiment(tweetEntry, profile)
         profile["relations"] = dict((x, y) for x, y in sorted(
             profile["relations"].items(), key=lambda x: x[1], reverse=True))  # Relations with people
         print(profile)
