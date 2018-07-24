@@ -2,7 +2,10 @@
 
 from pymongo import MongoClient
 from textblob import TextBlob
+from langdetect import detect
+from datetime import datetime
 import os
+import re
 
 
 class TwitterAnalysis:
@@ -31,14 +34,55 @@ class TwitterAnalysis:
         return self.clientSource.find(filter)
 
     def textProcOnTweet(self):
+        count = 0
+        for tweet in self.data:
+            try:
+                procText = TextBlob(self.cleaningTweet(tweet["text"]))
+                polarity = procText.sentiment.polarity
+                post = {
+                    "_id": tweet["_id"],
+                    "sentiment": "positive" if polarity >= 0.1 else "negative" if polarity <= -0.1 else "neutral",
+                    "polarity": float(polarity),
+                    "subjectivity": float(procText.sentiment.subjectivity),
+                    "language": detect(tweet["text"]),
+                    "hash_tags": re.findall(r"#(\w+)", tweet["text"]),
+                    "tag_user": re.findall(r"@(\w+)", tweet["text"]),
+                    "owner": tweet["user"],
+                    "publish-date": tweet["timestamp"],
+                    "interactions": int(tweet["likes"]) + int(tweet["replies"]) + int(tweet["retweets"])
+                }
+                self.clientDest.replace_one(
+                    {"_id": tweet["_id"]}, post, upsert=True)
+                count += 1
+                print("INFO:" + str(count) +
+                      "th Tweet Analysed inserted in database.")
+            except Exception as err:
+                print("Cannot insert analysed tweet in database cause: " + str(err))
+
+    def cleaningTweet(self, tweet):
+        tweet = re.sub(
+            r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', tweet)
+        tweet = re.sub(r'\bthats\b', 'that is', tweet)
+        tweet = re.sub(r'\bive\b', 'i have', tweet)
+        tweet = re.sub(r'\bim\b', 'i am', tweet)
+        tweet = re.sub(r'\bya\b', 'yeah', tweet)
+        tweet = re.sub(r'\bcant\b', 'can not', tweet)
+        tweet = re.sub(r'\bwont\b', 'will not', tweet)
+        tweet = re.sub(r'\bid\b', 'i would', tweet)
+        tweet = re.sub(r'wtf', 'what the fuck', tweet)
+        tweet = re.sub(r'\bwth\b', 'what the hell', tweet)
+        tweet = re.sub(r'\br\b', 'are', tweet)
+        tweet = re.sub(r'\bu\b', 'you', tweet)
+        tweet = re.sub(r'\bk\b', 'OK', tweet)
+        tweet = re.sub(r'\bsux\b', 'sucks', tweet)
+        tweet = re.sub(r'\bno+\b', 'no', tweet)
+        tweet = re.sub(r'\bcoo+\b', 'cool', tweet)
+        return tweet
 
 
 if __name__ == "__main__":
     analysis = TwitterAnalysis()
-    count = 0
-    for twit in analysis.data:
-        print(twit)
-        count += 1
-    print(count)
+    analysis.textProcOnTweet()
+
     # print(analysis.data)
     # print(analysis.client)
