@@ -5,7 +5,7 @@ const insertOutput = require('./neo4j');
 
 const url = process.env.MONGODB_URL || 'mongodb://localhost:27017';
 const dbName = process.env.MONGODB_DBNAME || 'test';
-const inputCollectionName = process.env.MONGODB_INPUT_COLLECTIONNAME || 'instagram';
+const inputCollectionName = process.env.MONGODB_COLLECTIONNAME || 'instagram';
 const username = process.env.IG_USERID;
 
 

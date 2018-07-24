@@ -2,7 +2,11 @@ const neo4j = require('neo4j-driver').v1;
 
 const logger = require('./logger');
 
-const neo4jUrl = 'bolt://localhost';
+const neo4jUrl = process.env.NEO4J_URL || 'bolt://localhost';
+const neo4jAuth = neo4j.auth.basic(
+  process.env.NEO4J_USER || 'neo4j',
+  process.env.NEO4J_PASS || 'neo4j',
+);
 
 const updateOrCreateProfile = async (session, { profile }) => {
   const request = 'MERGE (user:Instagram { username: {username} })\
@@ -46,7 +50,7 @@ const addLocations = async (session, { profile, posts }) => posts.reduce(async (
 }, true);
 
 module.exports = async (json) => {
-  const driver = neo4j.driver(neo4jUrl, neo4j.auth.basic('neo4j', 'test'));
+  const driver = neo4j.driver(neo4jUrl, neo4jAuth);
   const session = driver.session();
   const ret = (
     await updateOrCreateProfile(session, json)
