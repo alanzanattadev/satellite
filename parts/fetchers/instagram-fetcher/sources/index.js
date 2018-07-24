@@ -36,7 +36,7 @@ const credentials = {
     }).then((data) => {
       db.collection(collectionName).replaceOne({ 'profile.username': username }, data, { upsert: true }, (error, r) => {
         if (error) { throw err; }
-        if (!r || r.insertedCount !== 1) {
+        if (!r || (r.modifiedCount !== 1 && r.upsertedId !== 1)) {
           return logger.error('Error during insertion in mongodb collection');
         }
         logger.info('Data succefully stored');
