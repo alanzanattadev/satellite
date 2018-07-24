@@ -33,6 +33,7 @@ const credentials = {
       highlights: true,
       stories: true,
       posts: true,
+      postMeta: true,
     }).then((data) => {
       db.collection(collectionName).replaceOne({ 'profile.username': username }, data, { upsert: true }, (error, r) => {
         if (error) { throw err; }
