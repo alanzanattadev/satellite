@@ -7,7 +7,7 @@ const PASSWORD_SELECTOR = 'input[name="password"]';
 const LOGIN_BUTTON_SELECTOR = 'button._5f5mN';
 
 const waitOptions = { waitUntil: 'networkidle0', timeout: 5000 };
-const typeOptions = { delay: 50 };
+const typeOptions = { delay: 80 };
 
 module.exports.login = async (page, username, password) => {
   if (!page || !username || !password) {
