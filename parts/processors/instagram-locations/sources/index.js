@@ -28,8 +28,11 @@ const findInput = db => new Promise((resolve, reject) => db
       const json = await findInput(db);
       if (json && json.posts && json.posts.length > 0) {
         logger.info(`Start guessing location for ${json.posts.length} posts`);
+        let done = 0;
         const array = await Promise.all(json.posts.map(async (e) => {
           const possibleLocations = await getLocationFromText(e.text);
+          done += 1;
+          logger.debug(`${done} done!`);
           return { ...e, possibleLocations };
         }));
         logger.debug('Insert locations in neo4j');
