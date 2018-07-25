@@ -1,45 +1,21 @@
 #!/usr/bin/env python3
-import sys
-import os
 import json
-from pymongo import MongoClient
 import http.client
 import urllib.parse
 import collections
+import satellipy.utils.cli as CliUtils
+import satellipy.configuration.mongo as MongoConf
+import satellipy.configuration.emotion as EmotionConf
 
 if __name__ == '__main__':
-    # Params parsing
-    if len(sys.argv) > 1:
-        username = sys.argv[1]
-        print("Username: ", username)
-    else:
-        print("Enter username, you can get it by sharing from the mobile app")
-        print("usage: python main.py [username]")
-        sys.exit()
-
-    # Mongo connection
-    mongo_host = os.environ.get('MONGO_HOST', "localhost")
-    mongo_port = os.environ.get('MONGO_PORT', 27017)
-    mongo_client = MongoClient(mongo_host, mongo_port)
-    mongo_database_name = os.environ.get('MONGO_DATABASE', 'spotify-habits')
-    db = mongo_client[mongo_database_name]
-    mongo_emotions_collection_name = os.environ.get(
-        'MONGO_EMOTIONS_COLLECTION',
-        'emotions'
-    )
-    emotions_collection = db[mongo_emotions_collection_name]
-    mongo_lyrics_collection_name = os.environ.get(
-        'MONGO_LYRICS_COLLECTION',
-        'lyrics'
-    )
-    lyrics_collection = db[mongo_lyrics_collection_name]
-
-    # Emotion API Connection
-    emotion_host = os.environ.get('EMOTION_HOST', 'localhost')
-    emotion_port = os.environ.get('EMOTION_PORT', 5000)
+    username = CliUtils.parse_username_from_args()
+    mongo_client = MongoConf.get_client(MongoConf.parse_env())
+    emotions_collection = mongo_client['collections']['emotions']
+    lyrics_collection = mongo_client['collections']['lyrics']
 
     # Get emotions for each lyrics
-    conn = http.client.HTTPConnection(emotion_host, emotion_port)
+    emotion_conf = EmotionConf.parse_env()
+    conn = http.client.HTTPConnection(emotion_conf['host'], emotion_conf['port'])
     emotions_collection.delete_many({'user_id': username})
     cursor = lyrics_collection.find({'user_id': username})
     for doc in cursor:

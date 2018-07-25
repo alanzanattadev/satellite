@@ -1,53 +1,15 @@
 #!/usr/bin/env python3
-import sys
-import os
-import http.client
-import json
-from pymongo import MongoClient
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+import satellipy.utils.cli as cli
+import satellipy.configuration.spotify as SpotifyConf
+import satellipy.configuration.mongo as MongoConf
 
 if __name__ == '__main__':
 
-    # Params parsing
-    if len(sys.argv) > 1:
-        username = sys.argv[1]
-        print("Username: ", username)
-    else:
-        print("Enter username, you can get it by sharing from the mobile app")
-        print("usage: python main.py [username]")
-        sys.exit()
-
-    # Spotify token initialization
-    token = os.environ.get('SPOTIFY_TOKEN', "")
-    client_credentials_manager = SpotifyClientCredentials()
-
-    # Mongo connection
-    mongo_host = os.environ.get('MONGO_HOST', "localhost")
-    mongo_port = os.environ.get('MONGO_PORT', 27017)
-    mongo_client = MongoClient(mongo_host, mongo_port)
-    mongo_database_name = os.environ.get('MONGO_DATABASE', 'spotify-habits')
-    db = mongo_client[mongo_database_name]
-    mongo_songs_collection_name = os.environ.get(
-        'MONGO_SONGS_COLLECTION',
-        'playlisted-songs'
-    )
-    songs_collection = db[mongo_songs_collection_name]
-    mongo_audio_features_collection_name = os.environ.get(
-        'MONGO_AUDIO_FEATURES_COLLECTION',
-        'audio-features'
-    )
-    audio_features_collection = db[mongo_audio_features_collection_name]
-
-    # Token selection
-    if token != "":
-        print("Using user token")
-        sp = spotipy.Spotify(auth=token)
-    else:
-        print("Can't get spotify token, using default")
-        sp = spotipy.Spotify(
-            client_credentials_manager=client_credentials_manager
-        )
+    username = cli.parse_username_from_args()
+    sp = SpotifyConf.get_client(SpotifyConf.parse_env())
+    mongo = MongoConf.get_client(MongoConf.parse_env())
+    songs_collection = mongo['collections']['songs']
+    audio_features_collection = mongo['collections']['audio_features']
 
     # Audio features fetching
     cursor = songs_collection.find({'user_id': username})
