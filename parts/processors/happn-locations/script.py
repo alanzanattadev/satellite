@@ -32,7 +32,7 @@ def insertLocation(tx, location):
 
 def saveData(profile, location):
     print(profile, location)
-    driver = GraphDatabase.driver('bolt://localhost', auth=('neo4j', 'test'))
+    driver = GraphDatabase.driver(neo4jUrl, auth=(neo4jUser, neo4jPass))
 
     with driver.session() as session:
         session.write_transaction(updateProfile, profile)
