@@ -1,9 +1,11 @@
 # Using lightweight alpine image
 FROM python:3.6-alpine
 
+LABEL maintainer="paulrosset96@gmail.com"
+
 RUN apk update \
-        && apk add --no-cache git openssh-client libxml2-dev libxslt-dev python-dev build-base \
-        && pip install pipenv twitterscraper  \
+        && apk add --no-cache libxml2-dev libxslt-dev python-dev build-base \
+        && pip install twitterscraper textblob langdetect pandas  \
         && addgroup -S -g 1001 app \
         && adduser -S -D -h /app -u 1001 -G app app
 

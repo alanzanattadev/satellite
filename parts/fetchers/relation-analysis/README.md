@@ -89,3 +89,10 @@ I'm using pandas as data analyser for analysis for create an intelligent relatio
   ```
   - `profile`: Then return the profile of the user.
     .
+
+### Docker
+
+Docker Image available:
+
+- To create the image: `docker build -t twitter-analysis:1.0 ./`
+- To start the container: `docker run -it [-e var=value...] twitter-analysis:1.0`
