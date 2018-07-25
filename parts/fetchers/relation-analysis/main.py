@@ -35,7 +35,7 @@ class TwitterAnalysis:
     def getDataFromDb(self, filter):
         return self.clientSource.find(filter)
 
-    def textProcOnTweet(self):
+    def procOnEachTweet(self):
         count = 0
         for tweet in self.data:
             try:
@@ -183,7 +183,7 @@ class TwitterAnalysis:
         self.analysisByTime(profile["tweetPerDay"], timeSet)
         df = self.createDfBasedOnTime(timeSet)
         profile["analysisDataFrame"] = df
-        print(profile)
+        return profile
 
 
 if __name__ == "__main__":

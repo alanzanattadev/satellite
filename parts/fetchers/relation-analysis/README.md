@@ -45,7 +45,7 @@ I'm using pandas as data analyser for analysis for create an intelligent relatio
   - `ownerOfTheSetOfTweet`: _Important_, give the user name of the set of tweet owner, in order to give you the most accurate data analysis.
     > At launch two databases connections will be establish (`dbSrc`, `dbDest`) thank's to connection argument given above.
 
-- `textProcOnTweet()`: Draw a first analysis, then insert in database (`dbDest`) depending the filter when initalized
+- `procOnEachTweet()`: Draw a first analysis, then insert in database (`dbDest`) depending the filter when initalized
   > If the tweet is already processed and inserted in database, he will not be re-inserted again. The target/destination database will be the one given above.
 - `checkRelationsOnCreatorTweet()`: Process tweets that didnt come from you, to create relation, given:
   - `tweet`: The tweet
@@ -96,3 +96,19 @@ Docker Image available:
 
 - To create the image: `docker build -t twitter-analysis:1.0 ./`
 - To start the container: `docker run -it [-e var=value...] twitter-analysis:1.0`
+
+### CLI
+
+```
+usage: cli.py [-h] [-f FILTER] [-p] twitterUser
+
+positional arguments:
+  twitterUser           Twitter ID
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FILTER, --filter FILTER
+                        Filter the processed tweet
+  -p, --process         Draw a first analysis for each tweet, then insert in
+                        database (dbDest)
+```
