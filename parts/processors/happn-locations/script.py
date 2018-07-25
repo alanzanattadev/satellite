@@ -1,17 +1,46 @@
 import happn
 import pprint
 import time
+import os
+from neo4j.v1 import GraphDatabase
 
-token = ''
-me = happn.User(token)
+token = os.getenv('HAPPN_TOKEN', None)
+if (token == None):
+    print('HAPPN_TOKEN env variable is not defined')
+    exit(1)
+neo4jUrl = os.getenv('NEO4J_URL', 'bolt://localhost')
+neo4jUser = os.getenv('NEO4J_USER', 'neo4j')
+neo4jPass = os.getenv('NEO4J_PASS', 'neo4j')
+targetID = os.getenv('HAPPN_ID', '')
+
+def updateProfile(tx, profile):
+    result = tx.run('MERGE (user:Happn { id: {id} })\
+  ON CREATE SET user = {profile}, user.createdAt = timestamp()\
+  ON MATCH SET user = {profile}, user.updatedAt = timestamp()\
+  RETURN user.username', id=profile.get('id'), profile=profile)
+    return result.single()[0]
+
+def insertLocation(tx, location):
+    newLocation = {
+        'lat': location.get('lat'),
+        'lon': location.get('lon')
+    }
+    result = tx.run('MATCH (user:Happn { id: {id} })\
+  CREATE (user)-[r:LOCATED { date: {date} }]->(location:Location {location})\
+  RETURN location.name', id=profile.get('id'), date=location.get('date'), location=newLocation)
+    return result.single()[0]
 
 def saveData(profile, location):
-    pprint.pprint(profile)
-    pprint.pprint(location)
-    return
+    print(profile, location)
+    driver = GraphDatabase.driver('bolt://localhost', auth=('neo4j', 'test'))
+
+    with driver.session() as session:
+        session.write_transaction(updateProfile, profile)
+        #session.write_transaction(insertLocation, location)
+    return driver.close()
 
 alreadyseen = []
-targetID = ''
+me = happn.User(token)
 
 while True:
     print('Get new NEAR_YOU notifications')
