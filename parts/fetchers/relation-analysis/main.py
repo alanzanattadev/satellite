@@ -97,19 +97,12 @@ class TwitterAnalysis:
                 else:
                     object["relations"][tag_user] = object["relations"][tag_user] + 1
 
-    def checkSentiment(self, tweet, object):
-        sentiment = tweet["sentiment"]
-        if not sentiment in object["sentiment"]:
-            object["sentiment"][sentiment] = 1
+    def checkBasic(self, tweet, object, field):
+        fetchedTweet = tweet[field]
+        if not fetchedTweet in object[field]:
+            object[field][fetchedTweet] = 1
         else:
-            object["sentiment"][sentiment] = object["sentiment"][sentiment] + 1
-
-    def checkLanguages(self, tweet, object):
-        lang = tweet["language"]
-        if not lang in object["lang"]:
-            object["lang"][lang] = 1
-        else:
-            object["lang"][lang] = object["lang"][lang] + 1
+            object[field][fetchedTweet] = object[field][fetchedTweet] + 1
 
     def checkHashTags(self, tweet, object):
         for tags in tweet["hash_tags"]:
@@ -174,8 +167,8 @@ class TwitterAnalysis:
                 tweetEntry, profile)
             self.checkRelationOnTagUser(
                 tweetEntry, profile)
-            self.checkSentiment(tweetEntry, profile)
-            self.checkLanguages(tweetEntry, profile)
+            self.checkBasic(tweetEntry, profile, "sentiment")
+            self.checkBasic(tweetEntry, profile, "language")
             self.checkHashTags(tweetEntry, profile)
             self.getTweetPerDay(tweetEntry, profile)
         profile["relations"] = dict((x, y) for x, y in sorted(
@@ -188,5 +181,5 @@ class TwitterAnalysis:
 
 if __name__ == "__main__":
     analysis = TwitterAnalysis("RossetPaul")
-    # analysis.textProcOnTweet() Process a first analysis on each tweet
-    # analysis.mapReduceOnEachTweet() Process a global analysis on the complete set of tweet to draw a first profile.
+    # analysis.textProcOnTweet() # Process a first analysis on each tweet
+    # analysis.mapReduceOnEachTweet() # Process a global analysis on the complete set of tweet to draw a first profile.
