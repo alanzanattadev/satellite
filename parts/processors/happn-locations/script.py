@@ -31,12 +31,12 @@ def insertLocation(tx, location):
     return result.single()[0]
 
 def saveData(profile, location):
-    print(profile, location)
+    print('Insert location for profile with id:', profile.get('id'))
     driver = GraphDatabase.driver(neo4jUrl, auth=(neo4jUser, neo4jPass))
 
     with driver.session() as session:
         session.write_transaction(updateProfile, profile)
-        #session.write_transaction(insertLocation, location)
+        session.write_transaction(insertLocation, location)
     return driver.close()
 
 alreadyseen = []
