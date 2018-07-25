@@ -4,15 +4,14 @@ from pymongo import MongoClient
 from textblob import TextBlob
 from langdetect import detect
 from datetime import datetime
-import functools
+import pandas as pd
 import os
 import re
-import operator
-from collections import OrderedDict
 
 
 class TwitterAnalysis:
-    def __init__(self, filterOnTwit={}):
+    def __init__(self, ownerOfTheSetOfTweet, filterOnTwit={}):
+        self.owner = ownerOfTheSetOfTweet
         self.clientSource = self.setUpDb(
             "MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "MONGO_TWITTER_COLLECTION")
         self.clientDest = self.setUpDb(
@@ -82,25 +81,17 @@ class TwitterAnalysis:
         tweet = re.sub(r'\bcoo+\b', 'cool', tweet)
         return tweet
 
-    def setProfile(self, entryProcessed, x):
-        profile = {
-            "neutral": lambda x: x + 1,
-            "positive": lambda x: x + 1,
-            "negative": lambda x: x + 1,
-        }
-        return profile[entryProcessed](x)
-
-    def checkRelationsOnCreatorTweet(self, tweet, object, ownerOfTheSetOfTweet):
+    def checkRelationsOnCreatorTweet(self, tweet, object):
         ownerOfTweet = tweet["owner"]
-        if ownerOfTweet != ownerOfTheSetOfTweet:
+        if ownerOfTweet != self.owner:
             if not ownerOfTweet in object["relations"]:
                 object["relations"][ownerOfTweet] = 1
             else:
                 object["relations"][ownerOfTweet] = object["relations"][ownerOfTweet] + 1
 
-    def checkRelationOnTagUser(self, tweet, object, ownerOfTheSetOfTweet):
+    def checkRelationOnTagUser(self, tweet, object):
         for tag_user in tweet["tag_user"]:
-            if tag_user != ownerOfTheSetOfTweet:
+            if tag_user != self.owner:
                 if not tag_user in object["relations"]:
                     object["relations"][tag_user] = 1
                 else:
@@ -113,27 +104,89 @@ class TwitterAnalysis:
         else:
             object["sentiment"][sentiment] = object["sentiment"][sentiment] + 1
 
-    def mapReduceOnEachTweet(self, ownerOfTheSetOfTweet, filter={}):
+    def checkLanguages(self, tweet, object):
+        lang = tweet["language"]
+        if not lang in object["lang"]:
+            object["lang"][lang] = 1
+        else:
+            object["lang"][lang] = object["lang"][lang] + 1
+
+    def checkHashTags(self, tweet, object):
+        for tags in tweet["hash_tags"]:
+            if not tags in object["hashtags"]:
+                object["hashtags"][tags] = 1
+            else:
+                object["hashtags"][tags] = object["hashtags"][tags] + 1
+
+    def getTweetPerDay(self, tweet, object):
+        publishDate = tweet["publish-date"].strftime("%Y-%m-%d")
+        if tweet["owner"] == self.owner:
+            if not publishDate in object["tweetPerDay"]:
+                object["tweetPerDay"][publishDate] = 1
+            else:
+                object["tweetPerDay"][publishDate] = object["tweetPerDay"][publishDate] + 1
+
+    def analysisByTime(self, setOfTweetPerDay, dataSet):
+        for key, value in setOfTweetPerDay.items():
+            dataSet["time"].append(key)
+            dataSet["Nbtweet"].append(value)
+
+    def createDfBasedOnTime(self, dataSet):
+        df = pd.DataFrame(
+            dataSet, columns=["time", "Nbtweet"])
+        df['time'] = pd.to_datetime(df['time'])
+        # df.index = df["time"]
+        # del df["time"]
+        minDate = df["time"].min()
+        maxDate = df["time"].max()
+        diff = maxDate - minDate
+        nbTweetTotal = df["Nbtweet"].sum()
+        maxTweetOnOneDay = df["Nbtweet"].max()
+        return {
+            "historical": {
+                "firstTweet": minDate.strftime("%Y-%m-%d"),
+                "lastTweet": maxDate.strftime("%Y-%m-%d"),
+                "diff": str(diff.days)
+            },
+            "stats": {
+                "TweetPerDay": float(nbTweetTotal / diff.days),
+                "maxTweetOnOneDay": maxTweetOnOneDay
+            }
+        }
+
+    def mapReduceOnEachTweet(self, filter={}):
         setOfTweet = self.clientDest.find(filter)
         profile = {
             "relations": {},
-            "sentiment": {}
+            "sentiment": {},
+            "language": {},
+            "lang": {},
+            "hashtags": {},
+            "tweetPerDay": {},
+            "analysisDataFrame": None
+        }
+        timeSet = {
+            "time": [],
+            "Nbtweet": []
         }
         for tweetEntry in setOfTweet:
             self.checkRelationsOnCreatorTweet(
-                tweetEntry, profile, ownerOfTheSetOfTweet)
+                tweetEntry, profile)
             self.checkRelationOnTagUser(
-                tweetEntry, profile, ownerOfTheSetOfTweet)
+                tweetEntry, profile)
             self.checkSentiment(tweetEntry, profile)
+            self.checkLanguages(tweetEntry, profile)
+            self.checkHashTags(tweetEntry, profile)
+            self.getTweetPerDay(tweetEntry, profile)
         profile["relations"] = dict((x, y) for x, y in sorted(
             profile["relations"].items(), key=lambda x: x[1], reverse=True))  # Relations with people
+        self.analysisByTime(profile["tweetPerDay"], timeSet)
+        df = self.createDfBasedOnTime(timeSet)
+        profile["analysisDataFrame"] = df
         print(profile)
 
 
 if __name__ == "__main__":
-    analysis = TwitterAnalysis()
-    analysis.mapReduceOnEachTweet("RossetPaul")
-    # analysis.textProcOnTweet()
-
-    # print(analysis.data)
-    # print(analysis.client)
+    analysis = TwitterAnalysis("RossetPaul")
+    # analysis.textProcOnTweet() Process a first analysis on each tweet
+    # analysis.mapReduceOnEachTweet() Process a global analysis on the complete set of tweet to draw a first profile.
