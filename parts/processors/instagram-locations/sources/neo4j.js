@@ -24,12 +24,17 @@ const updateOrCreateProfile = async (session, { profile }) => {
 };
 
 const insertLocation = async (session, location, time, userDefined, username) => {
-  const request = 'MATCH (user:Instagram { username: {username} })\
-  CREATE (user)-[r:LOCATED { time: {time}, userDefined: {userDefined} }]->(location:Location {location})\
-  RETURN location.name';
+  const insertRequest = 'MERGE (location:Location { lat: {lat}, lon: {lon} }) RETURN location.id';
+  const linkRequest = 'MATCH (user:Instagram { username: {username} }), (location:Location { lat: {lat}, lon: {lon} })\
+  CREATE (user)-[r:LOCATED { time: {time}, userDefined: {userDefined} }]->(location) RETURN location.id';
   try {
-    const result = await session.run(request, { username, location, time, userDefined });
-    return (result.records.length === 1);
+    const resultInsert = await session.run(insertRequest, { lat: location.lat, lon: location.lng });
+    if (resultInsert.records.length !== 1) {
+      return false;
+    }
+    const linkResult = await session.run(linkRequest,
+      { username, lat: location.lat, lon: location.lng, time, userDefined });
+    return (linkResult.records.length === 1);
   } catch (error) {
     logger.error(error);
   }
