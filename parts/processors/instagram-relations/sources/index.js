@@ -27,7 +27,7 @@ const findInput = db => new Promise((resolve, reject) => db
       const json = await findInput(db);
       if (json && json.followers && json.following) {
         logger.debug('Insert relation in neo4j');
-        const res = await insertOutput({ json });
+        const res = await insertOutput(json);
         if (!res) {
           logger.error('Error during insertion in neo4j');
         } else {
