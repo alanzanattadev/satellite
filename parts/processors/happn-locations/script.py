@@ -21,13 +21,19 @@ def updateProfile(tx, profile):
     return result.single()[0]
 
 def insertLocation(tx, location):
+    result = tx.run('MERGE (location: Location { lat: {lat}, lon: {lon} })\
+  RETURN location.name', lat=location.get('lat'), lon=location.get('lon'))
+    return result.single()[0]
+
+def linkLocation(tx, data):
     newLocation = {
-        'lat': location.get('lat'),
-        'lon': location.get('lon')
+        'lat': data.get('location').get('lat'),
+        'lon': data.get('location').get('lon')
     }
-    result = tx.run('MATCH (user:Happn { id: {id} })\
-  CREATE (user)-[r:LOCATED { date: {date} }]->(location:Location {location})\
-  RETURN location.name', id=profile.get('id'), date=location.get('date'), location=newLocation)
+    result = tx.run('MATCH (user:Happn { id: {id} }), (location:Location { lat: {lat}, lon: {lon}})\
+  CREATE (user)-[r:LOCATED { date: {date} }]->(location)\
+  RETURN location.name', id=data.get('profile').get('id'), date=data.get('location').get('date'),
+    location=newLocation, lat=newLocation.get('lat'), lon=newLocation.get('lon'))
     return result.single()[0]
 
 def saveData(profile, location):
@@ -37,6 +43,7 @@ def saveData(profile, location):
     with driver.session() as session:
         session.write_transaction(updateProfile, profile)
         session.write_transaction(insertLocation, location)
+        session.write_transaction(linkLocation, { "profile": profile, "location": location })
     return driver.close()
 
 alreadyseen = []
