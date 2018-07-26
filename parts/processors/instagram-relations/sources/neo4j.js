@@ -25,8 +25,8 @@ const updateOrCreateProfile = async (session, { profile }) => {
 
 const insertRelation = async (session, otherUser, followDirection, username) => {
   const insertRequest = 'MERGE (other:Instagram { username: {otherUsername}, id: {otherID} })\
-  ON CREATE SET user = {profile}, user.createdAt = timestamp()\
-  ON MATCH SET user = {profile}, user.updatedAt = timestamp()\
+  ON CREATE SET other = {profile}, user.createdAt = timestamp()\
+  ON MATCH SET other = {profile}, user.updatedAt = timestamp()\
   RETURN other.id';
 
   const linkRequest = `MATCH (user:Instagram { username: {username} }), (other:Instagram { username: {otherUsername} })\
@@ -35,6 +35,7 @@ const insertRelation = async (session, otherUser, followDirection, username) => 
     const resultInsert = await session.run(insertRequest, {
       otherUsername: otherUser.username,
       otherID: otherUser.id,
+      profile: otherUser,
     });
     if (resultInsert.records.length !== 1) {
       return false;
