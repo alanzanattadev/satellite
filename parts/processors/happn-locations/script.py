@@ -48,7 +48,7 @@ def saveData(profile, location):
 
 me = happn.User(token)
 # Parse location area
-move = 0.0005 # 0,0005 (~= 54m) move in 10s ~= 20km/h
+move = 0.001 # 0,001 (~= 100m) move in 10s ~= 40km/h
 if (area != None):
     splited = area.split(':')
     if (len(splited) != 2 and len(splited) != 3):
