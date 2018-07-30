@@ -3,7 +3,7 @@ def analyse_audio_for_user(username, audio_features_collection):
     cursor = audio_features_collection.aggregate([
         {
             '$match': {
-                'user_id': username,
+                'users': {'$in': [username]},
             }
         },
         {

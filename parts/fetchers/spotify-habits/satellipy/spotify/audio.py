@@ -5,23 +5,29 @@ def fetch_audio_features(sp, username, songs_collection, audio_features_collecti
         artist = doc['song_artist']
         name = doc['song_name']
         id = doc['spotify_id']
-        # Clean collection to avoid duplicata
-        audio_features_collection.delete_many({
-            'song_artist': artist,
-            'song_name': name
-        })
-        # Fetch audio_features
-        print("=> Fetching audio features of: %s - %s" % (artist, name))
-        try:
-            features = sp.audio_features(tracks=[id])
-            audio_features = features[0]
-            print("... Audio features Found !")
-            audio_features_collection.insert_one({
-                'song_name': name,
-                'song_artist': artist,
-                'user_id': username,
-                'spotify_id': id,
-                'audio_features': audio_features
+        print("=> Checking audio features of: %s - %s" % (artist, name))
+        if audio_features_collection.find({
+            'spotify_id': id
+        }).count() == 0:
+            # Fetch audio_features
+            print("... Fetching audio features of: %s - %s" % (artist, name))
+            try:
+                features = sp.audio_features(tracks=[id])
+                audio_features = features[0]
+                print("... Audio features Found !")
+                audio_features_collection.insert_one({
+                    'song_name': name,
+                    'song_artist': artist,
+                    'spotify_id': id,
+                    'audio_features': audio_features,
+                    'users': [username]
+                })
+            except:
+                print("Error .")
+        else:
+            print("... Already in database")
+            audio_features_collection.update_one({'spotify_id': id}, {
+                '$addToSet': {
+                    'users': username
+                }
             })
-        except:
-            print("Error .")

@@ -13,7 +13,7 @@ def get_training_set(
 ):
     train_accounts = []
     train_labels = []
-    cursor = personalities_collection.find()
+    cursor = personalities_collection.find({'processed': True, 'predicted': False})
     for doc in cursor:
         train_accounts.append(
             Analysis.get_features_for_user(

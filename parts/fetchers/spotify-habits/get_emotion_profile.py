@@ -11,7 +11,7 @@ if __name__ == '__main__':
     emotions_collection = mongo_client['collections']['emotions']
     audio_features_collection = mongo_client['collections']['audio_features']
 
-    emotions = EmotionsAnalysis.analyse_emotions_of_user(
+    emotions, _, _ = EmotionsAnalysis.analyse_emotions_of_user(
         username, emotions_collection
     )
     audio_analysis = AudioAnalysis.analyse_audio_for_user(

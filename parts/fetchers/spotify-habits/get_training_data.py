@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+import time
 import satellipy.configuration.mongo as MongoConf
 import satellipy.configuration.spotify as SpotifyConf
 import satellipy.spotify.habits as Habits
 import satellipy.spotify.audio as Audio
 import satellipy.lyrics.fetch as Lyrics
 import satellipy.emotions.musics as Emotions
+import satellipy.personalities as Personalities
 
 
 if __name__ == "__main__":
@@ -17,7 +19,7 @@ if __name__ == "__main__":
     emotions_collection = mongo_client['collections']['emotions']
     audio_features_collection = mongo_client['collections']['audio_features']
     print("Getting training set")
-    cursor = personalities_collection.find({ 'predicted': False })
+    cursor = personalities_collection.find({ 'predicted': False, 'processed': False })
     for doc in cursor:
         user_id = doc['user_id']
         print("--------- For user %s -----------" % (user_id))
@@ -26,7 +28,10 @@ if __name__ == "__main__":
         print("=========== Getting lyrics")
         Lyrics.fetch_lyrics(user_id, songs_collection, lyrics_collection)
         print("=========== Getting emotions")
-        Emotions.fetch_emotions_for_user(user_id, lyrics_collection, emotions_collection)
+        Emotions.fetch_emotions_for_user(user_id, songs_collection, lyrics_collection, emotions_collection)
         print("=========== Getting audio features")
         Audio.fetch_audio_features(sp, user_id, songs_collection, audio_features_collection)
         print("----------------------------------")
+        Personalities.set_user_as_fetched(user_id, personalities_collection)
+        print("Sleeping 60s ...")
+        time.sleep(60)

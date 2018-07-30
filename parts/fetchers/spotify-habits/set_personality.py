@@ -18,4 +18,5 @@ if __name__ == '__main__':
         'user_id': username,
         'personality_label': label,
         'predicted': False,
+        'processed': False,
     })

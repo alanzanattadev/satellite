@@ -6,7 +6,7 @@ def fetch_and_save_playlist(tracks, collection, username, playlist):
         artists = track['artists']
         song_name = track['name']
         full_artist_name = reduce(
-            (lambda name, artist: name + artist['name']),
+            (lambda name, artist: name + ("" if name == "" else " ") + artist['name']),
             artists,
             ""
         )
