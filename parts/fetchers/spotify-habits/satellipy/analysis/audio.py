@@ -27,3 +27,12 @@ def analyse_audio_for_user(username, audio_features_collection):
                 'speechiness': result['speechinessAvg']
             }
         }
+    return {
+        'averages': {
+            'danceability': 0,
+            'energy': 0,
+            'valence': 0,
+            'instrumentalness': 0,
+            'speechiness': 0
+        }
+    }

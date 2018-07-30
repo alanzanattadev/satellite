@@ -2,6 +2,7 @@
 import satellipy.utils.cli as cli
 import satellipy.configuration.spotify as SpotifyConf
 import satellipy.configuration.mongo as MongoConf
+import satellipy.spotify.audio as Audio
 
 if __name__ == '__main__':
 
@@ -11,29 +12,4 @@ if __name__ == '__main__':
     songs_collection = mongo['collections']['songs']
     audio_features_collection = mongo['collections']['audio_features']
 
-    # Audio features fetching
-    cursor = songs_collection.find({'user_id': username})
-    for doc in cursor:
-        artist = doc['song_artist']
-        name = doc['song_name']
-        id = doc['spotify_id']
-        # Clean collection to avoid duplicata
-        audio_features_collection.delete_many({
-            'song_artist': artist,
-            'song_name': name
-        })
-        # Fetch audio_features
-        print("=> Fetching audio features of: %s - %s" % (artist, name))
-        try:
-            features = sp.audio_features(tracks=[id])
-            audio_features = features[0]
-            print("... Audio features Found !")
-            audio_features_collection.insert_one({
-                'song_name': name,
-                'song_artist': artist,
-                'user_id': username,
-                'spotify_id': id,
-                'audio_features': audio_features
-            })
-        except:
-            print("Error .")
+    Audio.fetch_audio_features(sp, username, songs_collection, audio_features_collection)
