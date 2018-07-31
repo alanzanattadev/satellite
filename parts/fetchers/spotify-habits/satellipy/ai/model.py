@@ -1,9 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
-import satellipy.utils.cli as CliUtils
 import satellipy.analysis as Analysis
-import satellipy.configuration.mongo as MongoConf
 import satellipy.personalities
 
 def get_model():
