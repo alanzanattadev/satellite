@@ -65,4 +65,11 @@ if __name__ == "__main__":
         )
     ])
     predictions = model.predict(target_accounts)
-    print("Personality: %s" % (satellipy.personalities.personalities[np.argmax(predictions)]))
+    results = [{'probability': p, 'type': satellipy.personalities.personalities[i]} for i,p in enumerate(predictions[0])]
+    results.sort(key=lambda x: x['probability'], reverse=True)
+    print("-------- Results --------")
+    print("Personality: %s" % (satellipy.personalities.personalities[np.argmax(predictions[0])]))
+    print("----------")
+    for result in results:
+        print("%s: %f" % (result['type'], result['probability']))
+    print("-------------------------")
