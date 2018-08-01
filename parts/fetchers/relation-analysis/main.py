@@ -83,19 +83,27 @@ class TwitterAnalysis:
 
     def checkRelationsOnCreatorTweet(self, tweet, object):
         ownerOfTweet = tweet["owner"]
+        date = tweet["publish-date"]
         if ownerOfTweet != self.owner:
             if not ownerOfTweet in object["relations"]:
-                object["relations"][ownerOfTweet] = 1
+                object["relations"][ownerOfTweet]["count"] = 1
+                object["relations"][ownerOfTweet]["date_first_evocation"] = date
             else:
-                object["relations"][ownerOfTweet] = object["relations"][ownerOfTweet] + 1
+                object["relations"][ownerOfTweet]["count"] = object["relations"][ownerOfTweet]["count"] + 1
+                object["relations"][ownerOfTweet]["date_first_evocation"] = min(
+                    object["relations"][ownerOfTweet]["date_first_evocation"], date)
 
     def checkRelationOnTagUser(self, tweet, object):
+        date = tweet["publish-date"]
         for tag_user in tweet["tag_user"]:
             if tag_user != self.owner:
                 if not tag_user in object["relations"]:
-                    object["relations"][tag_user] = 1
+                    object["relations"][tag_user]["count"] = 1
+                    object["relations"][tag_user]["date_first_evocation"] = date
                 else:
-                    object["relations"][tag_user] = object["relations"][tag_user] + 1
+                    object["relations"][tag_user]["count"] = object["relations"][tag_user]["count"] + 1
+                    object["relations"][tag_user]["date_first_evocation"] = min(
+                        object["relations"][tag_user]["date_first_evocation"], date)
 
     def checkBasic(self, tweet, object, field):
         fetchedTweet = tweet[field]
