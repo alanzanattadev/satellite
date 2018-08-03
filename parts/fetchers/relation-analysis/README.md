@@ -2,10 +2,13 @@
 
 ### Install dependencies
 
-- pymongo (`pip install pymongo`)
+`pip install ...`
+
+- pymongo
 - langdetect
 - textblob
 - pandas
+- neo4j-driver
 
 ### Connection to mongoDB
 
@@ -56,7 +59,7 @@ I'm using pandas as data analyser for analysis for create an intelligent relatio
 - `checkSentiment()`: Draw a global analysis based on sentiment thank's to the previous generated data above (`textProcOnTweet()`)
   - `tweet`: The tweet
   - `Object`: Where the data will be stored
-- `checkLanguages()`: Draw a global analysis based on language used in tweet thank's to the previous generated data above (`textProcOnTweet()`)
+- `checkLanguages()`: Draw a global analysis based on language used in tweet thank's to the previous generated data above (`textProcOnTweet()`).
   - `tweet`: The tweet
   - `Object`: Where the data will be stored
 - `checkHashTags()`: Draw a global analysis based on hash_tags used in tweet thank's to the previous generated data above (`textProcOnTweet()`)
@@ -112,3 +115,23 @@ optional arguments:
   -p, --process         Draw a first analysis for each tweet, then insert in
                         database (dbDest)
 ```
+
+### Neo4j
+
+Graph Database
+
+#### Connecting to Neo4j
+
+Make sure to fill the following env variables:
+
+- `NEO_URI`
+  - default: `bolt://localhost:7687`
+- `ǸEO_USER`
+  - default: `neo4j`
+- `NEO_PASS`
+
+  - default: `neo4j`
+
+- Delete all detected languages that are present only one time, to avoid biased data.
+
+Available class: `GraphDB`
