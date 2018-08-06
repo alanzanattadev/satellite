@@ -49,14 +49,3 @@ class GraphDB:
         for lang, amount in self.profile["language"].items():
             if amount > 1:
                 self.createNodeLang(lang, amount)
-
-
-test = GraphDB({
-    'relations': {
-        'ShLaYa': {'count': 2, 'first_interac': datetime.datetime(2013, 7, 10, 16, 17, 54), 'langs': ['fr']},
-        'Fnatic_sOAZ': {'count': 3, 'first_interac': datetime.datetime(2013, 7, 21, 18, 30, 29), 'langs': ['ca', 'en']},
-    },
-    'language': {'fr': 54, 'ca': 2, 'en': 39, 'de': 3, 'af': 3, 'fi': 2, 'nl': 1, 'ro': 1, 'da': 1, 'et': 1, 'pt': 1, 'vi': 1, 'sq': 1, 'id': 1},
-    "profileUser": "RossetPaul"
-})
-test.fetchNodesRelatedProfile()
