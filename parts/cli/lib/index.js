@@ -67,9 +67,9 @@ vorpal
                   httpResponse.statusCode >= 200 &&
                   httpResponse.statusCode < 300
                 ) {
-                  console.log(chalk.green("Upload of plugin successful"));
+                  vorpal.log(chalk.green("Upload of plugin successful"));
                 } else {
-                  console.log(chalk.red("Upload of plugin failed: " + body));
+                  vorpal.log(chalk.red("Upload of plugin failed: " + body));
                 }
                 callback();
               }
