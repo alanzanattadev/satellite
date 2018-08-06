@@ -1,8 +1,9 @@
 const parser = require('./parsing');
 const { REQUESTFINISHED_EVENT, isXHR, isGraphQLQuery, scrollDown } = require('./common');
 const logger = require('./logger');
+const saveRaw = require('./raw');
 
-const getAllPosts = async (user, page, postsCount, isPrivate) => {
+const getAllPosts = async (user, page, { postsCount, isPrivate, username }) => {
   let posts = [];
   let morePages = true;
 
@@ -10,6 +11,7 @@ const getAllPosts = async (user, page, postsCount, isPrivate) => {
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && isGraphQLQuery(res)) {
       const json = await res.response().json();
+      saveRaw('userpostsresource', username, json);
       const postsFromResource = parser.getPostsFromResource(json);
       posts = posts.concat(postsFromResource.map(p => parser.parsePost(p)));
 
@@ -38,6 +40,7 @@ const getFollows = async (page, username, followersOrFollowing, count) => {
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && isGraphQLQuery(res)) {
       const json = await res.response().json();
+      saveRaw('userfollowresource', username, json);
       const listFromResource = (
         followersOrFollowing
           ? parser.getFollowersFromResource(json)
@@ -56,11 +59,11 @@ const getFollows = async (page, username, followersOrFollowing, count) => {
   const frame = await page.mainFrame();
   try {
     const selector = parser.getFollowLink(username, followersOrFollowing);
-    await page.waitFor(selector);
+    await page.waitFor(selector, { timeout: 5000 });
     await frame.click(selector);
 
     const closeSelector = parser.getFollowDivSelector();
-    await page.waitFor(closeSelector);
+    await page.waitFor(closeSelector, { timeout: 3000 });
     await frame.click(closeSelector);
   } catch (err) {
     logger.error(`Cannot get follow${followersOrFollowing ? 'er' : 'ing'}s, try to login (maybe the account is private)`);
@@ -78,13 +81,15 @@ const getFollows = async (page, username, followersOrFollowing, count) => {
   return list;
 };
 
-const getHighlights = page => new Promise((resolve) => {
+const getHighlights = (page, username) => new Promise((resolve) => {
   if (!page) {
     resolve([]);
   }
   page.on(REQUESTFINISHED_EVENT, async (res) => {
     if (isXHR(res) && parser.isHighlightResource(res.url())) {
-      const highlightsFromResource = parser.getHighlightsFromResource(await res.response().json());
+      const json = await res.response().json();
+      saveRaw('userhighlightresource', username, json);
+      const highlightsFromResource = parser.getHighlightsFromResource(json);
       page.removeAllListeners(REQUESTFINISHED_EVENT);
 
       logger.verbose(`User's highlights found (${highlightsFromResource.length} items)`);
@@ -95,20 +100,24 @@ const getHighlights = page => new Promise((resolve) => {
 });
 
 module.exports.getData = async (page, { id, followers, following, posts, highlights }) => {
-  const username = id;
+  if (!page || !id) {
+    return null;
+  }
 
   let hlPromise = null;
   if (highlights === true) {
     hlPromise = getHighlights(page);
   }
 
-  logger.verbose(`Go on user '${username}' profile page`);
-  await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle0' });
+  logger.verbose(`Go on user '${id}' profile page`);
+  await page.goto(`https://www.instagram.com/${id}/`, { waitUntil: 'networkidle0' });
   const json = parser.getJSONFromHTML(await page.content());
+  saveRaw('userprofilepage', id, json);
   const user = parser.getUser(json);
 
   if (!user) {
-    return logger.error(`User ${username} not found...`);
+    logger.error(`User ${id} not found...`);
+    return null;
   }
 
   logger.verbose('Parse profile from user');
@@ -116,11 +125,11 @@ module.exports.getData = async (page, { id, followers, following, posts, highlig
   return {
     profile,
     posts: (posts !== true ? null
-      : await getAllPosts(user, page, profile.postsCount, profile.isPrivate)),
+      : await getAllPosts(user, page, profile)),
     followers: (followers !== true ? null
-      : await getFollows(page, username, true, profile.followersCount)),
+      : await getFollows(page, id, true, profile.followersCount)),
     following: (following !== true ? null
-      : await getFollows(page, username, false, profile.followsCount)),
+      : await getFollows(page, id, false, profile.followsCount)),
     highlights: (highlights !== true || hlPromise === null ? null : await hlPromise),
   };
 };

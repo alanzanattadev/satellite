@@ -2,52 +2,56 @@
 
 module.exports.getJSONFromHTML = (html) => {
   const regex = /_sharedData = (.*);<\/script>/;
-  return JSON.parse(regex.exec(html)[1].replace(/\n/, '\\n'));
+  const regexRes = regex.exec(html);
+  if (!regexRes || regexRes.length < 2) {
+    return null;
+  }
+  return JSON.parse(regexRes[1].replace(/\n/, '\\n'));
 };
 
 module.exports.getUser = (json) => {
-  if (!json['entry_data'] || !json['entry_data']['ProfilePage']) {
+  if (!json || !json['entry_data'] || !json['entry_data']['ProfilePage']) {
     return null;
   }
   return json['entry_data']['ProfilePage'][0]['graphql']['user'];
 };
 
 module.exports.getPost = (json) => {
-  if (!json['entry_data'] || !json['entry_data']['PostPage']) {
+  if (!json || !json['entry_data'] || !json['entry_data']['PostPage']) {
     return null;
   }
   return json['entry_data']['PostPage'][0]['graphql']['shortcode_media'];
 };
 
 module.exports.getLocation = (json) => {
-  if (!json['entry_data'] || !json['entry_data']['LocationsPage']) {
+  if (!json || !json['entry_data'] || !json['entry_data']['LocationsPage']) {
     return null;
   }
   return json['entry_data']['LocationsPage'][0]['graphql']['location'];
 };
 
-module.exports.parseLocation = json => ({
+module.exports.parseLocation = json => (!json ? null : {
   id: json['id'],
   name: json['name'],
   lat: json['lat'],
   lng: json['lng'],
 });
 
-module.exports.parseProfile = user => ({
+module.exports.parseProfile = user => (!user ? null : {
   id: user['id'],
   username: user['username'],
   fullname: user['full_name'],
   pictureUrl: user['profile_pic_url_hd'],
   biography: user['biography'],
   url: user['external_url'],
-  followersCount: user['edge_followed_by']['count'],
-  followsCount: user['edge_follow']['count'],
-  postsCount: user['edge_owner_to_timeline_media']['count'],
+  followersCount: (user['edge_followed_by'] ? user['edge_followed_by']['count'] : undefined),
+  followsCount: (user['edge_follow'] ? user['edge_follow']['count'] : undefined),
+  postsCount: (user['edge_owner_to_timeline_media'] ? user['edge_owner_to_timeline_media']['count'] : undefined),
   isPrivate: user['is_private'],
   isVerified: user['is_verified'],
 });
 
-const parseUser = (json, nodeName) => ({
+const parseUser = (json, nodeName) => (!json || !json[nodeName || 'node'] ? null : {
   id: json[nodeName || 'node']['id'],
   username: json[nodeName || 'node']['username'],
   // fullname: json['node']['full_name'],
@@ -66,7 +70,7 @@ const getMediaMeta = (node) => {
   };
 };
 
-const parseComment = edge => ({
+const parseComment = edge => (!edge || !edge['node'] || !edge['node']['owner'] ? null : {
   id: edge['node']['id'],
   text: edge['node']['text'],
   time: edge['node']['created_at'],
@@ -74,12 +78,19 @@ const parseComment = edge => ({
 });
 
 module.exports.parsePost = (json, withDetails) => {
+  if (!json) {
+    return null;
+  }
   const node = json['node'] || json;
+  if (!node || !node['__typename']) {
+    return null;
+  }
   const type = node['__typename'].replace('Graph', '').toLowerCase();
   const isVideo = node['is_video'];
 
   const text = (
-    node['edge_media_to_caption']['edges'].length > 0
+    node['edge_media_to_caption'] && node['edge_media_to_caption']['edges']
+      && node['edge_media_to_caption']['edges'].length > 0
       ? node['edge_media_to_caption']['edges'][0]['node']['text'] : null
   );
   const medias = (
@@ -92,8 +103,8 @@ module.exports.parsePost = (json, withDetails) => {
     text,
     type,
     time: node['taken_at_timestamp'],
-    likeCount: node['edge_media_preview_like']['count'],
-    commentCount: node['edge_media_to_comment']['count'],
+    likeCount: (node['edge_media_preview_like'] || {})['count'],
+    commentCount: (node['edge_media_to_comment'] || {})['count'],
     taggedUser: (
       !node['edge_media_to_tagged_user'] ? []
         : node['edge_media_to_tagged_user']['edges'].map(edge => edge['node']['user'])
@@ -117,16 +128,19 @@ module.exports.parsePost = (json, withDetails) => {
 };
 
 const getFromResource = (json, secondKey, firstKey) => {
+  if (!json || !json['data']) {
+    return null;
+  }
   const obj = json['data'][firstKey || 'user'];
   return (!obj || !obj[secondKey]) ? null : obj[secondKey];
 };
 
 const getArrayFromResource = (json, secondKey, firstKey) => {
   const obj = getFromResource(json, secondKey, firstKey);
-  return (!obj || !obj['edges']) ? [] : obj['edges'];
+  return (!obj || !obj['edges']) ? null : obj['edges'];
 };
 
-module.exports.getPostsFromUser = user => user['edge_owner_to_timeline_media']['edges'];
+module.exports.getPostsFromUser = user => (!user || !user['edge_owner_to_timeline_media'] ? null : user['edge_owner_to_timeline_media']['edges']);
 module.exports.getPostsFromResource = json => getArrayFromResource(json, 'edge_owner_to_timeline_media');
 module.exports.getFollowersFromResource = json => getArrayFromResource(json, 'edge_followed_by');
 module.exports.getFollowingsFromResource = json => getArrayFromResource(json, 'edge_follow');
@@ -142,7 +156,7 @@ module.exports.getFollowLink = (username, followersOrFollowing) => `a[href="/${u
 module.exports.getLikesLink = shortcode => `a[href="/p/${shortcode}/liked_by/"]`;
 module.exports.getCommentsLink = () => 'a.vTJ4h';
 
-module.exports.parseHighlight = json => ({
+module.exports.parseHighlight = json => (!json || !json['node'] ? null : {
   id: json['node']['id'],
   title: json['node']['title'],
 });
@@ -152,7 +166,7 @@ module.exports.getFollowDivCloseButtonSelector = () => '.ckWGn';
 module.exports.getLikesDivSelector = () => '.wwxN2';
 module.exports.getLikesDivCloseButtonSelector = () => '.Gzt1P';
 
-module.exports.isHighlightResource = url => url.includes('include_highlight_reels%22%3Atrue');
+module.exports.isHighlightResource = url => (!url || typeof url !== 'string' ? false : url.includes('include_highlight_reels%22%3Atrue'));
 
 const parseStoryMedia = (node) => {
   const type = node['__typename'].replace('GraphStory', '').toLowerCase();
@@ -167,10 +181,13 @@ const parseStoryMedia = (node) => {
 };
 
 module.exports.parseStories = (json) => {
-  if (!json['data'] || !json['data']['reels_media']) {
+  if (!json || !json['data'] || !json['data']['reels_media']) {
     return null;
   }
   const node = json['data']['reels_media'][0];
+  if (!node || !node['owner'] || !node['items']) {
+    return null;
+  }
   return {
     id: node['id'],
     owner: node['owner']['id'],
@@ -183,7 +200,7 @@ module.exports.parseComment = parseComment;
 
 const isMoreFromResources = (json, key1, key2) => {
   const list = getFromResource(json, key1, key2);
-  if (!list || !list['page_info'] || !list['page_info']['has_next_page']) {
+  if (!list || !list['page_info'] || list['page_info']['has_next_page'] !== false) {
     return true;
   }
   return list['page_info']['has_next_page'];
