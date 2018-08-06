@@ -8,6 +8,9 @@ const yargs = require("yargs")
   .option("pluginsDestDir", {
     default: "./.plugins/"
   })
+  .option("loadPluginsDir", {
+    default: null
+  })
   .option("port", {
     alias: "p",
     default: 8000
@@ -77,6 +80,56 @@ const pluginList = {
   emitter: new EventEmitter()
 };
 
+function loadPlugin(pluginPath, pluginName) {
+  return new Promise((resolve, reject) => {
+    const configPath = path.join(pluginPath, "features", "cli", "config.yml");
+    try {
+      const pluginConfig = yaml.safeLoad(
+        fs.readFileSync(`${configPath}`, "utf8")
+      );
+      pluginList.addPlugin(pluginName, pluginConfig);
+      console.log(chalk.cyan(`Loaded plugin ${pluginName}`));
+      resolve();
+    } catch (e) {
+      console.log(
+        chalk.red("Impossible to read CLI config: "),
+        chalk.red(e.toString())
+      );
+      reject("Impossible to load CLI config at " + configPath);
+    }
+  });
+}
+
+if (yargs.loadPluginsDir != null) {
+  const resolvedPath = path.resolve(process.cwd(), yargs.loadPluginsDir);
+  fs.readdir(resolvedPath, (err, files) => {
+    if (err) {
+      console.log(
+        "Impossible to read default plugins directory:\n",
+        chalk.red(err.toString())
+      );
+    } else {
+      files.forEach(file => {
+        const dirPath = path.join(resolvedPath, file);
+        fs.stat(dirPath, (err, stats) => {
+          if (err) {
+            console.log(
+              `Impossible to read plugin directory ${dirPath}:\n`,
+              chalk.red(err.toString())
+            );
+          } else {
+            if (stats.isDirectory()) {
+              loadPlugin(dirPath, file).then(() => {}, () => {});
+            } else {
+              console.log(chalk.red(`Path ${dirPath} is not a directory`));
+            }
+          }
+        });
+      });
+    }
+  });
+}
+
 app.post("/plugins/load", upload.single("plugin"), (req, res) => {
   const pluginName = req.body.pluginName;
   const pluginPath = req.file.path;
@@ -99,26 +152,15 @@ app.post("/plugins/load", upload.single("plugin"), (req, res) => {
           console.log(
             chalk.cyan(`Unzipped ${pluginName} at ${unzippedPluginPath}`)
           );
-          const configPath = path.join(
-            unzippedPluginPath,
-            "features",
-            "cli",
-            "config.yml"
+          loadPlugin(unzippedPluginPath, pluginName).then(
+            () => {
+              res.send("Ok");
+            },
+            err => {
+              res.status(500);
+              res.send(err);
+            }
           );
-          try {
-            const pluginConfig = yaml.safeLoad(
-              fs.readFileSync(`${configPath}`, "utf8")
-            );
-            pluginList.addPlugin(pluginName, pluginConfig);
-            res.send("Ok");
-          } catch (e) {
-            console.log(
-              chalk.red("Impossible to read CLI config: "),
-              chalk.red(e.toString())
-            );
-            res.status(500);
-            res.send("Impossible to load CLI config at " + configPath);
-          }
         }
       }
     );
