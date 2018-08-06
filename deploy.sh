@@ -25,6 +25,7 @@ run_cmd() {
         elif [ $RET != "0" ]; then
             printf "${RED}Command: '$1' failed..${STD}\n"
             printf "${CYAN}Will run '$2' and retry${STD}\n"
+            sleep 1
             sh -c "$2"
             printf "${CYAN}Run: '$1' ${STD}\n"
             sh -c "$1"
