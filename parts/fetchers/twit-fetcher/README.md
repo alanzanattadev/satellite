@@ -34,3 +34,12 @@ Fill the following env variables to connect to mongoDB:
   - default: `twitter_database`
 - `MONGO_TWITTER_COLLECTION`
   - default: `twitter_collection`
+
+### Dockerize MongoDB
+
+Available images: Alpine Python3.6.6
+
+- Create the images:
+  - `docker build -t twitter-scrapper:1.0 ./`
+- Run the container:
+  - `docker run -it -e [var=value...] --network="host" twitter-scrapper:1.0` (`--network`, option available to share the network with the host)
