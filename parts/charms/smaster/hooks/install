@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+status-set maintenance "Installing dependencies..."
+apt-get install -y curl python-pip
+pip install requests charmhelpers charm-tools
+curl -fsSL get.docker.com -o get-docker.sh
+sh get-docker.sh
+docker pull supa/smaster
+open-port 80

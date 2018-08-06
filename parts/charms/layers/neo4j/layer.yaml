@@ -1,0 +1,2 @@
+includes: ['layer:apt', 'layer:java', 'interface:db-info']
+repo: git@github.com/sebastienpattyn93/tengu-charms.git
