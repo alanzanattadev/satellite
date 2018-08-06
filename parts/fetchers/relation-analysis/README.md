@@ -3,7 +3,6 @@
 ### Install dependencies
 
 `pip install ...`
-
 - pymongo
 - langdetect
 - textblob
@@ -49,6 +48,7 @@ I'm using pandas as data analyser for analysis for create an intelligent relatio
     > At launch two databases connections will be establish (`dbSrc`, `dbDest`) thank's to connection argument given above.
 
 - `procOnEachTweet()`: Draw a first analysis, then insert in database (`dbDest`) depending the filter when initalized
+- `textProcOnTweet()`: Draw a first analysis, then insert in database (`dbDest`) depending the filter when initalized
   > If the tweet is already processed and inserted in database, he will not be re-inserted again. The target/destination database will be the one given above.
 - `checkRelationsOnCreatorTweet()`: Process tweets that didnt come from you, to create relation, given:
   - `tweet`: The tweet

@@ -5,11 +5,12 @@
   "main": "sources/index.js",
   "license": "MIT",
   "scripts": {
-    "start": "node sources/index.js",
-    "test": "eslint ./sources/*.js"
+    "start": "node ./sources/main.js",
+    "test": "eslint ./sources/*.js && jest",
+    "eslint": "eslint ./sources/*.js"
   },
   "dependencies": {
-    "mongodb": "^3.0.10",
+    "mongodb": "^3.1.1",
     "optimist": "^0.6.1",
     "puppeteer": "^1.5.0",
     "winston": "^3.0.0"
@@ -17,6 +18,7 @@
   "devDependencies": {
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^13.0.0",
-    "eslint-plugin-import": "^2.13.0"
+    "eslint-plugin-import": "^2.13.0",
+    "jest": "^23.2.0"
   }
 }

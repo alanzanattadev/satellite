@@ -1,0 +1,11 @@
+{
+    "extends": "airbnb-base",
+    "rules": {
+      "no-unused-vars": 1,
+      "object-curly-newline": 0,
+      "no-multi-str": 0
+    },
+    "env": {
+      "node": true
+    }
+}

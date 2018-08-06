@@ -8,7 +8,6 @@ import pandas as pd
 import os
 import re
 import collections
-#from graph import GraphDB
 
 
 class TwitterAnalysis:
@@ -194,13 +193,3 @@ class TwitterAnalysis:
         df = self.createDfBasedOnTime(timeSet)
         profile["analysisDataFrame"] = df
         return profile
-
-
-if __name__ == "__main__":
-    analysis = TwitterAnalysis("RossetPaul")
-    # analysis.procOnEachTweet()  # Process a first analysis on each tweet
-    # Process a global analysis on the complete set of tweet to draw a first profile.
-    profile = analysis.mapReduceOnEachTweet()
-    print(profile)
-    # test = GraphDB(profile) # Start a graph Neo4j session
-    # test.createNodesRelatedProfile() # Create Node and relationships Person/Langs
