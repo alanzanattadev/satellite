@@ -24,6 +24,7 @@ const { argv } = require('optimist')
   .alias('a', 'all')
   .describe('a', 'Get all possible data')
   .describe('no-headless', 'Show browser during scrap')
+  .describe('raw', 'Save raw JSON get from browser')
   .alias('v', 'verbose')
   .describe('verbose', 'Change log level to verbose')
   .demand(2);
@@ -45,6 +46,7 @@ const options = {
   highlights: argv.a || argv.highlights || false,
   stories: argv.a || argv.stories || false,
   posts: argv.a || argv.m || argv.posts || false,
+  raw: argv.raw || false,
   headless: !(argv.headless === false),
   logLevel: (argv.verbose ? 'verbose' : 'info'),
 };

@@ -35,7 +35,7 @@ Fill the following env variables to connect to mongoDB:
 - `MONGO_TWITTER_COLLECTION`
   - default: `twitter_collection`
 
-### Dockerize MongoDB
+### Dockerize Application
 
 Available images: Alpine Python3.6.6
 

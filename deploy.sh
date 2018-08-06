@@ -25,6 +25,7 @@ run_cmd() {
         elif [ $RET != "0" ]; then
             printf "${RED}Command: '$1' failed..${STD}\n"
             printf "${CYAN}Will run '$2' and retry${STD}\n"
+            sleep 1
             sh -c "$2"
             printf "${CYAN}Run: '$1' ${STD}\n"
             sh -c "$1"
@@ -53,5 +54,13 @@ run_cmd "juju deploy cs:~hazmat/trusty/kafka-1"
 run_cmd "juju deploy cs:~hazmat/trusty/zookeeper-0"
 run_cmd "juju add-relation kafka zookeeper"
 run_cmd "juju deploy cs:mongodb-48"
-run_cmd "juju deploy cs:neo4j-0"
+run_cmd "juju deploy cs:~jamesbeedy/vault-13"
+run_cmd "juju deploy ./parts/charms/layers/neo4j"
+run_cmd "juju deploy ./parts/charms/smaster"
+run_cmd "juju add-relation neo4j smaster"
+run_cmd "juju add-relation kafka smaster"
+run_cmd "juju add-relation kubernetes-master smaster"
+run_cmd "juju add-relation vault smaster"
+run_cmd "juju expose smaster"
+
 printf "${GREEN}Deployment succeed, see 'juju status'${STD}\n"
