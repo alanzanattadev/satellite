@@ -129,9 +129,19 @@ Make sure to fill the following env variables:
 - `ǸEO_USER`
   - default: `neo4j`
 - `NEO_PASS`
-
   - default: `neo4j`
+
+#### Neo4j API
 
 - Delete all detected languages that are present only one time, to avoid biased data.
 
 Available class: `GraphDB`
+
+### Dockerize Application
+
+Available images: Alpine Python3.6.6
+
+- Create the images:
+  - `docker build -t twitter-relation:1.0 ./`
+- Run the container:
+  - `docker run -it -e [var=value...] --network="host" twitter-relation:1.0` (`--network`, option available to share the network with the host)

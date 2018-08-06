@@ -5,7 +5,7 @@ LABEL maintainer="paulrosset96@gmail.com"
 
 RUN apk update \
         && apk add --no-cache libxml2-dev libxslt-dev python-dev build-base \
-        && pip install twitterscraper textblob langdetect pandas  \
+        && pip install twitterscraper textblob langdetect pandas pymongo neo4j-driver \
         && addgroup -S -g 1001 app \
         && adduser -S -D -h /app -u 1001 -G app app
 
@@ -18,4 +18,7 @@ RUN chown -R app.app /app/
 COPY ./* ./
 USER app
 
+# Determine the entrypoint
+# Launch the service:
+# python cli.py [-p] [-g] TwitterIDUser
 CMD ["/bin/sh"]
