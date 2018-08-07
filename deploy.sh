@@ -53,13 +53,11 @@ run_cmd "conjure-up kubernetes-core localhost"
 
 run_cmd "juju deploy cs:kafka-40"
 run_cmd "juju deploy cs:zookeeper-42"
-#run_cmd "juju deploy cs:ubuntu-12"
 run_cmd "juju deploy cs:filebeat-18"
 run_cmd "juju deploy cs:mongodb-48"
 run_cmd "juju deploy cs:~jamesbeedy/vault-13"
 
 run_cmd "juju add-relation kafka zookeeper"
-#run_cmd "juju add-relation filebeat:beats-host ubuntu"
 run_cmd "juju add-relation kubernetes-master filebeat"
 run_cmd "juju add-relation kubernetes-worker filebeat"
 run_cmd "juju add-relation kafka filebeat"
