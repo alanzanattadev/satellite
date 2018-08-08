@@ -11,6 +11,9 @@ const yargs = require("yargs")
   .option("loadPluginsDir", {
     default: null
   })
+  .option("deploymentFilesDest", {
+    default: "/tmp/"
+  })
   .option("port", {
     alias: "p",
     default: 8000
@@ -19,12 +22,14 @@ const chalk = require("chalk");
 const { exec } = require("child_process");
 const yaml = require("js-yaml");
 const EventEmitter = require("events");
-const Kafka = require('node-rdkafka');
+const Kafka = require("node-rdkafka");
+const template = require("swig");
+const guid = require("uuid/v4");
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
 
 function createPluginsDir(cb) {
-  fs.mkdir(pluginsDestPath, 0755, function(err) {
+  fs.mkdir(pluginsDestPath, 0o755, function(err) {
     if (err) {
       if (err.code == "EEXIST") {
         console.log(chalk.green("Plugins folder already created"));
@@ -88,7 +93,18 @@ function loadPlugin(pluginPath, pluginName) {
       const pluginConfig = yaml.safeLoad(
         fs.readFileSync(`${configPath}`, "utf8")
       );
-      pluginList.addPlugin(pluginName, pluginConfig);
+      pluginList.addPlugin(
+        pluginName,
+        pluginConfig.map(c => ({
+          ...c,
+          ["kubernetes-file"]: path.join(
+            pluginPath,
+            "features",
+            "deployments",
+            c["kubernetes-file"]
+          )
+        }))
+      );
       console.log(chalk.cyan(`Loaded plugin ${pluginName}`));
       resolve();
     } catch (e) {
@@ -180,6 +196,54 @@ function createSocketCLIUpdater(socket) {
   };
 }
 
+function getDeploymentFileFromCommand(command) {
+  return new Promise((resolve, reject) => {
+    const foundCommand = pluginList
+      .getCommands()
+      .find(c => c.configuration === command);
+    if (foundCommand) resolve(foundCommand["kubernetes-file"]);
+    else reject("Deployment file not found");
+  });
+}
+
+function compileTemplate(filePath, args) {
+  return new Promise((resolve, reject) => {
+    const deploymentFile = filePath;
+    console.log(chalk.cyan(`Compiling file template ${deploymentFile}`));
+    const renderedContent = template.renderFile(deploymentFile, args);
+    console.log(renderedContent);
+    const renderedFileName = `compiled-template-${guid()}`;
+    const renderedFilePath = path.join(
+      yargs.deploymentFilesDest,
+      renderedFileName
+    );
+    console.log(chalk.cyan(`Writing rendered file to ${renderedFilePath}`));
+    const renderedFile = fs.writeFile(
+      renderedFilePath,
+      renderedContent,
+      err => {
+        if (err) {
+          console.log(
+            chalk.red(
+              `Impossible to write file ${renderedFilePath}: ${err.toString()}`
+            )
+          );
+          reject(err.toString());
+        } else {
+          console.log(chalk.green(`Deployment file ready !`));
+          resolve(renderedFilePath);
+        }
+      }
+    );
+  });
+}
+
+function runCommand(command, args) {
+  return getDeploymentFileFromCommand(command)
+    .then(filePath => compileTemplate(filePath, args))
+    .then(deploymentFilePath => console.log(chalk.cyan(deploymentFilePath)));
+}
+
 createPluginsDir(err => {
   if (err == null) {
     server.listen(yargs.port);
@@ -192,32 +256,34 @@ createPluginsDir(err => {
       updateCLI();
 
       const kafkaConsumer = new Kafka.KafkaConsumer({
-        'group.id': socket.id,
-        'metadata.broker.list': `${process.env.KAFKA_HOST}:${process.en.KAFKA_PORT}`,
+        "group.id": socket.id,
+        "metadata.broker.list": `${process.env.KAFKA_HOST}:${
+          process.en.KAFKA_PORT
+        }`
       });
-      kafkaConsumer.on('event.error', (err) => {
+      kafkaConsumer.on("event.error", err => {
         socket.emit("log", {
           topic: "Kafka",
           time: new Date(),
           stream: "stderr",
           message: `Cannot connect to Kafka to collect logs (${err.stack})`,
-          source: 'client driver',
+          source: "client driver"
         });
       });
       kafkaConsumer.connect();
-      kafkaConsumer.on('ready', () => {
+      kafkaConsumer.on("ready", () => {
         kafkaConsumer.subscribe(["kube-logs"]);
         kafkaConsumer.consume();
       });
-      kafkaConsumer.on('data', (data) => {
+      kafkaConsumer.on("data", data => {
         const value = JSON.parse(data.value.toString());
         const msg = JSON.parse(value.message);
         socket.emit("log", {
           topic: data.topic,
           time: msg.time,
           stream: msg.stream,
-          message: msg.log.replace(/\n/g, ''),
-          source: value.source.match(/\/var\/log\/containers\/([^_]*)_/)[1],
+          message: msg.log.replace(/\n/g, ""),
+          source: value.source.match(/\/var\/log\/containers\/([^_]*)_/)[1]
         });
       });
 
@@ -229,6 +295,15 @@ createPluginsDir(err => {
               data.type
             )}" with args ${JSON.stringify(data.args)}`
           )
+        );
+        runCommand(data.type, data.args).then(
+          () => socket.emit("logs", { logs: chalk.green("Launched.") }),
+          err => {
+            console.log(chalk.red(err.toString()));
+            socket.emit("logs", {
+              logs: chalk.red(`Impossible to run command:\n${err.toString()}`)
+            });
+          }
         );
       });
       socket.on("disconnect", function() {
