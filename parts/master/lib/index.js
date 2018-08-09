@@ -222,12 +222,14 @@ createPluginsDir(err => {
 app.get("/logs", (req, res) => {
   kafkaConsumer.connect();
   kafkaConsumer.on('ready', () => {
-
     kafkaConsumer.subscribe("kube-logs");
-    kafkaConsumer.consume((err, msg) => {
-      console.log(msg)
+    kafkaConsumer.consume(100, (err, msg) => {
+      console.log(err, msg)
     });
-    kafkaConsumer.disconnect();
+    //kafkaConsumer.disconnect();
   });
-  res.send("coucou");
+  kafkaConsumer.on('data', (data) => {
+    console.log(data)
+  });
+  //res.send("coucou");
 });
