@@ -83,7 +83,7 @@ vorpal
 vorpal.command("logs", "Get logs from Kubernetes pods")
   .action(function(args, callback) {
     request.get({ url: `${new URL("/logs", serverUri)}` }, function(err, res, body) {
-      if (err) {
+      if (err || res.statusCode >= 300) {
         console.error(
           chalk.red("Error during log request:" + err.toString())
         );
