@@ -78,6 +78,19 @@ vorpal
         }
       }
     );
+  })
+  .command("logs", "Get logs from Kubernetes pods")
+  .action(function(args, callback) {
+    request.get({ url: `${new URL("/logs", serverUri)}` }, function(err, res, body) {
+      if (err) {
+        console.error(
+          chalk.red("Error during log request:" + err.toString())
+        );
+        return callback();
+      }
+      vorpal.log(body);
+      return callback();
+    });
   });
 
 socket.on("cli-config", function({ commands = [] }, callback) {

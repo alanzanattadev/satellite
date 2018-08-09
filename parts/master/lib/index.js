@@ -212,3 +212,7 @@ createPluginsDir(err => {
     });
   }
 });
+
+app.get("/logs", (req, res) => {
+  res.send("coucou");
+});
