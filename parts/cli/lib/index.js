@@ -78,8 +78,9 @@ vorpal
         }
       }
     );
-  })
-  .command("logs", "Get logs from Kubernetes pods")
+  });
+
+vorpal.command("logs", "Get logs from Kubernetes pods")
   .action(function(args, callback) {
     request.get({ url: `${new URL("/logs", serverUri)}` }, function(err, res, body) {
       if (err) {
