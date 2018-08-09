@@ -19,8 +19,14 @@ const chalk = require("chalk");
 const { exec } = require("child_process");
 const yaml = require("js-yaml");
 const EventEmitter = require("events");
+const Kafka = require('node-rdkafka');
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
+
+const kafkaConsumer = await new Kafka.KafkaConsumer({
+  'group.id': 'kafka',
+  'metadata.broker.list': 'localhost:9092',
+});
 
 function createPluginsDir(cb) {
   fs.mkdir(pluginsDestPath, 0755, function(err) {
@@ -214,5 +220,9 @@ createPluginsDir(err => {
 });
 
 app.get("/logs", (req, res) => {
+  kafkaConsumer.subscribe("kube-logs");
+  kafkaConsumer.consume((err, msg) => {
+    console.log(msg)
+  });
   res.send("coucou");
 });
