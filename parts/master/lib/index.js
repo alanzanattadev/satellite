@@ -23,7 +23,7 @@ const Kafka = require('node-rdkafka');
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
 
-const kafkaConsumer = await new Kafka.KafkaConsumer({
+const kafkaConsumer = new Kafka.KafkaConsumer({
   'group.id': 'kafka',
   'metadata.broker.list': 'localhost:9092',
 });
@@ -220,9 +220,14 @@ createPluginsDir(err => {
 });
 
 app.get("/logs", (req, res) => {
-  kafkaConsumer.subscribe("kube-logs");
-  kafkaConsumer.consume((err, msg) => {
-    console.log(msg)
+  kafkaConsumer.connect();
+  kafkaConsumer.on('ready', () => {
+
+    kafkaConsumer.subscribe("kube-logs");
+    kafkaConsumer.consume((err, msg) => {
+      console.log(msg)
+    });
+    kafkaConsumer.disconnect();
   });
   res.send("coucou");
 });
