@@ -222,7 +222,7 @@ createPluginsDir(err => {
 app.get("/logs", (req, res) => {
   kafkaConsumer.connect();
   kafkaConsumer.on('ready', () => {
-    kafkaConsumer.subscribe("kube-logs");
+    kafkaConsumer.subscribe(["kube-logs", "log"]);
     kafkaConsumer.consume(100, (err, msg) => {
       console.log(err, msg)
     });
