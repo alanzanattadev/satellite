@@ -79,7 +79,7 @@ vorpal
       }
     );
   });
-
+/*
 vorpal.command("logs", "Get logs from Kubernetes pods")
   .action(function(args, callback) {
     request.get({ url: `${new URL("/logs", serverUri)}` }, function(err, res, body) {
@@ -93,7 +93,7 @@ vorpal.command("logs", "Get logs from Kubernetes pods")
       return callback();
     });
   });
-
+*/
 socket.on("cli-config", function({ commands = [] }, callback) {
   vorpal.log(chalk.cyan("receiving CLI config..."));
   commandsCache.forEach(command => command.remove());
@@ -117,6 +117,10 @@ socket.on("cli-config", function({ commands = [] }, callback) {
 
 socket.on("connect", function() {
   vorpal.log(chalk.green(`Connected to ${serverUri}`));
+});
+
+socket.on("log", (log) => {
+  console.log(log); // gray
 });
 
 socket.on("connect_error", function() {

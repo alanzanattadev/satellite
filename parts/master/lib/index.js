@@ -23,11 +23,6 @@ const Kafka = require('node-rdkafka');
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
 
-const kafkaConsumer = new Kafka.KafkaConsumer({
-  'group.id': 'kafka',
-  'metadata.broker.list': 'localhost:9092',
-});
-
 function createPluginsDir(cb) {
   fs.mkdir(pluginsDestPath, 0755, function(err) {
     if (err) {
@@ -196,6 +191,20 @@ createPluginsDir(err => {
       const updateCLI = createSocketCLIUpdater(socket);
       updateCLI();
 
+      const kafkaConsumer = new Kafka.KafkaConsumer({
+        'group.id': socket.id,
+        'metadata.broker.list': `${process.env.KAFKA_ADDRESS}:9092`,
+      });
+      kafkaConsumer.connect();
+      kafkaConsumer.on('ready', () => {
+        kafkaConsumer.subscribe(["kube-logs", "log"]);
+        kafkaConsumer.consume();
+      });
+      kafkaConsumer.on('data', (data) => {
+        console.log(data);
+        socket.emit("log", data);
+      });
+
       pluginList.emitter.on("new plugin", updateCLI);
       socket.on("command", function(data) {
         console.log(
@@ -214,11 +223,13 @@ createPluginsDir(err => {
           )
         );
         io.emit("user disconnected");
+
+        kafkaConsumer.disconnect();
       });
     });
   }
 });
-
+/*
 app.get("/logs", (req, res) => {
   kafkaConsumer.connect();
   kafkaConsumer.on('ready', () => {
@@ -232,4 +243,4 @@ app.get("/logs", (req, res) => {
     console.log(data)
   });
   //res.send("coucou");
-});
+});*/
