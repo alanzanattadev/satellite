@@ -202,8 +202,8 @@ createPluginsDir(err => {
         socket.emit("log", "Connect to kafka, wait for logs...");
       });
       kafkaConsumer.on('data', (data) => {
-        const msg = JSON.parse(data.value.message);
-        socket.emit("log", `[${data.topic}] [${msg.time}] ${msg.log}`);
+        const msg = JSON.parse(JSON.parse(data.value.toString()).message);
+        socket.emit("log", `[${data.topic}] [${msg.time}] ${msg.log}\n${data.value.toString()}`);
       });
 
       pluginList.emitter.on("new plugin", updateCLI);
@@ -230,18 +230,3 @@ createPluginsDir(err => {
     });
   }
 });
-/*
-app.get("/logs", (req, res) => {
-  kafkaConsumer.connect();
-  kafkaConsumer.on('ready', () => {
-    kafkaConsumer.subscribe(["kube-logs", "log"]);
-    kafkaConsumer.consume(100, (err, msg) => {
-      console.log(err, msg)
-    });
-    //kafkaConsumer.disconnect();
-  });
-  kafkaConsumer.on('data', (data) => {
-    console.log(data)
-  });
-  //res.send("coucou");
-});*/
