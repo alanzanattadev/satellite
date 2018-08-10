@@ -120,7 +120,7 @@ socket.on("connect", function() {
 });
 
 socket.on("log", (log) => {
-  console.log(log); // gray
+  vorpal.log(chalk.gray(log))
 });
 
 socket.on("connect_error", function() {

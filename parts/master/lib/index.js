@@ -202,8 +202,7 @@ createPluginsDir(err => {
         socket.emit("log", "Connect to kafka, wait for logs...");
       });
       kafkaConsumer.on('data', (data) => {
-        console.log(data);
-        socket.emit("log", data);
+        socket.emit("log", `[${data.topic}] ${data.value.toString()}`);
       });
 
       pluginList.emitter.on("new plugin", updateCLI);
