@@ -199,7 +199,6 @@ createPluginsDir(err => {
       kafkaConsumer.on('ready', () => {
         kafkaConsumer.subscribe(["kube-logs"]);//, "log"]);
         kafkaConsumer.consume();
-        socket.emit("log", "Connect to kafka, wait for logs...");
       });
       kafkaConsumer.on('data', (data) => {
         const value = JSON.parse(data.value.toString());
@@ -209,7 +208,7 @@ createPluginsDir(err => {
           time: msg.time,
           stream: msg.stream,
           message: msg.log.replace(/\n/g, ''),
-          source: value.source.match(/\/var\/log\/containers\/(.*)_/),
+          source: value.source.match(/\/var\/log\/containers\/([^_]*)_/)[1],
         });
       });
 
