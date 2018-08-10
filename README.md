@@ -24,7 +24,7 @@ You can monitor units with `juju status` or via the web gui with `juju gui`.
 
 ### Master
 
-- Install build-essentials
+- Install build-essentials python librdkafka-dev
 - cd into parts/master
 - yarn
 - yarn start
