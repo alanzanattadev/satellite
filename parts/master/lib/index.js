@@ -199,6 +199,7 @@ createPluginsDir(err => {
       kafkaConsumer.on('ready', () => {
         kafkaConsumer.subscribe(["kube-logs", "log"]);
         kafkaConsumer.consume();
+        socket.emit("log", "Connect to kafka, wait for logs...");
       });
       kafkaConsumer.on('data', (data) => {
         console.log(data);
