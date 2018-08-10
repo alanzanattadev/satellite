@@ -202,7 +202,7 @@ createPluginsDir(err => {
         socket.emit("log", "Connect to kafka, wait for logs...");
       });
       kafkaConsumer.on('data', (data) => {
-        const msg = data.value.message;
+        const msg = JSON.parse(data.value.message);
         socket.emit("log", `[${data.topic}] [${msg.time}] ${msg.log}`);
       });
 
