@@ -202,8 +202,15 @@ createPluginsDir(err => {
         socket.emit("log", "Connect to kafka, wait for logs...");
       });
       kafkaConsumer.on('data', (data) => {
-        const msg = JSON.parse(JSON.parse(data.value.toString()).message);
-        socket.emit("log", `[${data.topic}] [${msg.time}] ${msg.log}\n${data.value.toString()}`);
+        const value = JSON.parse(data.value.toString());
+        const msg = JSON.parse(value.message);
+        socket.emit("log", {
+          topic: data.topic,
+          time: msg.time,
+          stream: msg.stream,
+          message: msg.log.replace(/\n/g, ''),
+          source: value.source.match(/\/var\/log\/containers\/(.*)_/),
+        });
       });
 
       pluginList.emitter.on("new plugin", updateCLI);
