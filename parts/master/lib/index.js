@@ -171,6 +171,10 @@ app.post("/plugins/load", upload.single("plugin"), (req, res) => {
   }
 });
 
+app.get('/visu', (req, res) => {
+  res.send("Ok");
+});
+
 function createSocketCLIUpdater(socket) {
   return function updater() {
     socket.emit("cli-config", {

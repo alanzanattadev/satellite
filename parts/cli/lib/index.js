@@ -80,6 +80,20 @@ vorpal
     );
   });
 
+vorpal
+  .command("visu", "Prepare visualization")
+  .action((args, callback) => {
+    request.get({ url: `${new URL("/visu", serverUri)}` }, (err, http, body) => {
+        if (err || http.statusCode >= 300) {
+          vorpal.log(chalk.red("Upload of plugin failed:" + err.toString()));
+          return callback();
+        }
+        vorpal.log(body)
+        return callback();
+      }
+    );
+  });
+
 socket.on("cli-config", function({ commands = [] }, callback) {
   vorpal.log(chalk.cyan("receiving CLI config..."));
   commandsCache.forEach(command => command.remove());
