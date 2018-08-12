@@ -19,6 +19,7 @@ const chalk = require("chalk");
 const { exec } = require("child_process");
 const yaml = require("js-yaml");
 const EventEmitter = require("events");
+const neo4j = require('neo4j-driver').v1;
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
 
@@ -172,6 +173,13 @@ app.post("/plugins/load", upload.single("plugin"), (req, res) => {
 });
 
 app.get('/visu', (req, res) => {
+  const driver = neo4j.driver('10.253.64.36', neo4j.auth.basic('neo4j', 'test'));
+  const session = driver.session();
+  session.run('MATCH () RETURN *').then(result => {
+    session.close();
+    driver.close();
+    console.log(result);
+  });
   res.send("Ok");
 });
 
