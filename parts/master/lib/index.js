@@ -175,12 +175,11 @@ app.post("/plugins/load", upload.single("plugin"), (req, res) => {
 app.get('/visu', (req, res) => {
   const driver = neo4j.driver('bolt://10.253.64.36', neo4j.auth.basic('neo4j', 'neo4j'));
   const session = driver.session();
-  session.run('MATCH () RETURN *').then(result => {
+  session.run('MATCH (a)-[r]-(b) RETURN *').then(result => {
     session.close();
     driver.close();
-    console.log(result);
+    res.send(result.records);
   });
-  res.send("Ok");
 });
 
 function createSocketCLIUpdater(socket) {
