@@ -85,7 +85,7 @@ vorpal
   .action((args, callback) => {
     request.get({ url: `${new URL("/visu", serverUri)}` }, (err, http, body) => {
         if (err || http.statusCode >= 300) {
-          vorpal.log(chalk.red("Upload of plugin failed:" + err.toString()));
+          vorpal.log(chalk.red("Visualization request failed:" + err));
           return callback();
         }
         vorpal.log(body)
