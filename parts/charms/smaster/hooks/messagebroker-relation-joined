@@ -3,11 +3,21 @@
 from charmhelpers.core.hookenv import unit_get, relations, relation_ids, remote_unit
 import requests
 import json
+from subprocess import call
 
 address = unit_get("public-address")
 relation = relations()
 idMessageBroker = relation_ids()[0]
 remoteUnit = remote_unit()
 header = {"Content-Type": "application/json"}
-payload = {"service": "kafka", "public-address": address, "host": relation["messagebroker"][idMessageBroker][remoteUnit]["private-address"], "port": relation["messagebroker"][idMessageBroker][remoteUnit]["port"]}
-requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))
+payload = {"service": "kafka", "public-address": address, "host": relation["messagebroker"][idMessageBroker]
+           [remoteUnit]["private-address"], "port": relation["messagebroker"][idMessageBroker][remoteUnit]["port"]}
+requests.post("https://test-api-ddlrzsfdsc.now.sh/",
+              headers=header, data=json.dumps(payload))
+
+# Set the env
+call("echo 'export KAFKA_PA=" + address + "' >> ~/.bashrc", shell=True)
+call("echo 'export KAFKA_HOST=" + relation["messagebroker"][idMessageBroker]
+     [remoteUnit]["private-address"] + "' >> ~/.bashrc", shell=True)
+call("echo 'export KAFKA_PORT=" +
+     relation["messagebroker"][idMessageBroker][remoteUnit]["port"] + "' >> ~/.bashrc", shell=True)
