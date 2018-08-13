@@ -105,6 +105,11 @@ socket.on("connect", function() {
   vorpal.log(chalk.green(`Connected to ${serverUri}`));
 });
 
+socket.on("log", (log) => {
+  vorpal.log(chalk.gray(`[${log.topic} ${log.source}] [${log.time}] [${log.stream}]`));
+  vorpal.log(chalk.gray(log.message));
+});
+
 socket.on("connect_error", function() {
   vorpal.log(chalk.red(`Impossible to connect to ${serverUri}`));
 });

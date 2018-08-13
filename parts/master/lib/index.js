@@ -19,6 +19,7 @@ const chalk = require("chalk");
 const { exec } = require("child_process");
 const yaml = require("js-yaml");
 const EventEmitter = require("events");
+const Kafka = require('node-rdkafka');
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
 
@@ -190,6 +191,27 @@ createPluginsDir(err => {
       const updateCLI = createSocketCLIUpdater(socket);
       updateCLI();
 
+      const kafkaConsumer = new Kafka.KafkaConsumer({
+        'group.id': socket.id,
+        'metadata.broker.list': `${process.env.KAFKA_ADDRESS}:9092`,
+      });
+      kafkaConsumer.connect();
+      kafkaConsumer.on('ready', () => {
+        kafkaConsumer.subscribe(["kube-logs"]);//, "log"]);
+        kafkaConsumer.consume();
+      });
+      kafkaConsumer.on('data', (data) => {
+        const value = JSON.parse(data.value.toString());
+        const msg = JSON.parse(value.message);
+        socket.emit("log", {
+          topic: data.topic,
+          time: msg.time,
+          stream: msg.stream,
+          message: msg.log.replace(/\n/g, ''),
+          source: value.source.match(/\/var\/log\/containers\/([^_]*)_/)[1],
+        });
+      });
+
       pluginList.emitter.on("new plugin", updateCLI);
       socket.on("command", function(data) {
         console.log(
@@ -208,6 +230,8 @@ createPluginsDir(err => {
           )
         );
         io.emit("user disconnected");
+
+        kafkaConsumer.disconnect();
       });
     });
   }
