@@ -17,4 +17,3 @@ requests.post("https://test-api-ddlrzsfdsc.now.sh/",
 # Set the env
 call("echo 'export SMASTER_PA=" + address + "' >> ~/.bashrc", shell=True)
 call("echo 'export SMASTER_HOST=" + "80" + "' >> ~/.bashrc", shell=True)
-#call("echo 'export SMASTER_PORT=" +  + "' >> ~/.bashrc", shell=True)
