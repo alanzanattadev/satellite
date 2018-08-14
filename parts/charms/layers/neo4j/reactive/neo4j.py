@@ -60,7 +60,9 @@ def install_python_driver():
 def initial_config():
     utils.re_edit_in_place('/etc/neo4j/neo4j.conf', {
         r'^#?dbms.connectors.default_listen_address=([0-9].[0-9].[0-9].[0-9]|)$':
-            'dbms.connectors.default_listen_address=0.0.0.0'
+            'dbms.connectors.default_listen_address=0.0.0.0',
+        r'^#?dbms.security.auth_enabled=false$':
+            'dbms.security.auth_enabled=false'
     })
 
 
