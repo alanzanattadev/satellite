@@ -193,7 +193,7 @@ createPluginsDir(err => {
 
       const kafkaConsumer = new Kafka.KafkaConsumer({
         'group.id': socket.id,
-        'metadata.broker.list': `${process.env.KAFKA_ADDRESS}:9092`,
+        'metadata.broker.list': `${process.env.KAFKA_HOST}:${process.en.KAFKA_PORT}`,
       });
       kafkaConsumer.on('event.error', (err) => {
         socket.emit("log", {
