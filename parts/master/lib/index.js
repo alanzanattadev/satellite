@@ -173,7 +173,7 @@ app.post("/plugins/load", upload.single("plugin"), (req, res) => {
 });
 
 app.get('/visu', (req, res) => {
-  const driver = neo4j.driver(`bolt://${process.env.NEO_HOST}`, neo4j.auth.basic('neo4j', 'neo4j'));
+  const driver = neo4j.driver(`bolt://${process.env.NEO_HOST}`, neo4j.auth.basic('neo4j', 'neo4j_pass'));
   const session = driver.session();
   session.run('MATCH (a)-[r]-(b) RETURN *').then(result => {
     session.close();
