@@ -26,7 +26,7 @@ run_cmd() {
             printf "${RED}Command: '$1' failed..${STD}\n"
             printf "${CYAN}Will check '$2' and retry${STD}\n"
             # Wait for file
-            while [ $(test -f $2 ; echo $?) == "1"]; do
+            while [ "$(test -e $2 ; echo $?)" == "1" ]; do
                 sleep 1
             done
             # Add permissions to file
