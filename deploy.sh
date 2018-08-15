@@ -25,13 +25,10 @@ run_cmd() {
         elif [ $RET != "0" ]; then
             printf "${RED}Command: '$1' failed..${STD}\n"
             printf "${CYAN}Will check '$2' and retry${STD}\n"
-            sleep 1
             # Wait for file
-            while read i; do
-                if [ "$i" = $2 ]; then
-                    break;
-                fi;
-            done < <(inotifywait  -e create,open --format '%f' --quiet /tmp --monitor)
+            while [ $(test -f $2 ; echo $?) == "1"]; do
+                sleep 1
+            done
             # Add permissions to file
             sh -c "sudo chmod o+rw  $2"
             printf "${CYAN}Run: '$1' ${STD}\n"
