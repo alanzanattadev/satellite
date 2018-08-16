@@ -3,9 +3,17 @@
 from charmhelpers.core.hookenv import unit_get, config
 import requests
 import json
+from subprocess import call
+
 
 address = unit_get("public-address")
 cfg = config()
 header = {"Content-Type": "application/json"}
-payload = {"service": "smaster", "public-address": address, "port": 80, "config": cfg}
-requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))
+payload = {"service": "smaster",
+           "public-address": address, "port": 80, "config": cfg}
+requests.post("https://test-api-ddlrzsfdsc.now.sh/",
+              headers=header, data=json.dumps(payload))
+
+# Set the env
+call("echo 'export SMASTER_PA=" + address + "' >> ~/.bashrc", shell=True)
+call("echo 'export SMASTER_HOST=" + "80" + "' >> ~/.bashrc", shell=True)

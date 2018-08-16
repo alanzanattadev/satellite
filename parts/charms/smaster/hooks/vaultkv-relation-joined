@@ -3,11 +3,20 @@
 from charmhelpers.core.hookenv import unit_get, relations, relation_ids, remote_unit
 import requests
 import json
+from subprocess import call
 
 address = unit_get("public-address")
 relation = relations()
 idMessageBroker = relation_ids()[0]
 remoteUnit = remote_unit()
 header = {"Content-Type": "application/json"}
-payload = {"service": "vault", "public-address": address, "host": relation["vaultkv"][idMessageBroker][remoteUnit]["private-address"], "port": "default-port"}
-requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))
+payload = {"service": "vault", "public-address": address,
+           "host": relation["vaultkv"][idMessageBroker][remoteUnit]["private-address"], "port": "default-port"}
+requests.post("https://test-api-ddlrzsfdsc.now.sh/",
+              headers=header, data=json.dumps(payload))
+
+# Set the env
+call("echo 'export VAULT_PA=" + address + "' >> ~/.bashrc", shell=True)
+call("echo 'export VAULT_HOST=" + relation["vaultkv"][idMessageBroker]
+     [remoteUnit]["private-address"] + "' >> ~/.bashrc", shell=True)
+call("echo 'export VAULT_PORT=" + "default-port" + "' >> ~/.bashrc", shell=True)
