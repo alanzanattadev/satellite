@@ -1,4 +1,5 @@
 const app = require("express")();
+const bodyParser = require("body-parser");
 const multer = require("multer");
 const server = require("http").Server(app);
 const io = require("socket.io")(server);
@@ -20,6 +21,9 @@ const { exec } = require("child_process");
 const yaml = require("js-yaml");
 const EventEmitter = require("events");
 const Kafka = require('node-rdkafka');
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 const networkConfig = {};
 app.post('/config/:app', (req, res) => {
