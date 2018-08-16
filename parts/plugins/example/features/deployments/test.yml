@@ -1,21 +1,15 @@
 ---
- apiVersion: extensions/v1beta1
- kind: Deployment
- metadata:
-   name: rss-site
- spec:
-   replicas: 2
-   template:
-     metadata:
-       labels:
-         app: web
-     spec:
-       containers:
-         - name: front-end
-           image: {{ okok }}
-           ports:
-             - containerPort: 80
-         - name: rss-reader
-           image: nickchase/rss-php-nginx:v1
-           ports:
-             - containerPort: 88
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-deployment
+spec:
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+        - name: test
+          image: mongo
+      restartPolicy: Never
