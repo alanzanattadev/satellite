@@ -1,4 +1,5 @@
 const app = require("express")();
+const bodyParser = require("body-parser");
 const multer = require("multer");
 const server = require("http").Server(app);
 const io = require("socket.io")(server);
@@ -28,6 +29,23 @@ const template = require("swig");
 const guid = require("uuid/v4");
 
 template.setDefaults({ cache: false });
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+const networkConfig = {
+  kafka: { host: "0.0.0.0" },
+  neo4j: { host: "0.0.0.0" },
+  vault: { host: "0.0.0.0" },
+  kube: { host: "0.0.0.0" },
+};
+app.post('/config/:app', (req, res) => {
+  const { body, params } = req;
+  const { app } = params;
+  networkConfig[app] = body;
+  res.send('ok');
+  console.log(chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`));
+});
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
 
@@ -194,7 +212,7 @@ app.post("/plugins/load", upload.single("plugin"), (req, res) => {
 });
 
 app.get('/visu', (req, res) => {
-  const driver = neo4j.driver(`bolt://${process.env.NEO_HOST}`, neo4j.auth.basic('neo4j', 'neo4j_pass'));
+  const driver = neo4j.driver(`bolt://${networkConfig.neo4j.host}`, neo4j.auth.basic('neo4j', 'neo4j'));
   const session = driver.session();
   session.run('MATCH (a)-[r]-(b) RETURN *').then(result => {
     session.close();
@@ -298,10 +316,8 @@ createPluginsDir(err => {
       updateCLI();
 
       const kafkaConsumer = new Kafka.KafkaConsumer({
-        "group.id": socket.id,
-        "metadata.broker.list": `${process.env.KAFKA_HOST}:${
-          process.env.KAFKA_PORT
-        }`
+        'group.id': socket.id,
+        'metadata.broker.list': `${networkConfig.kafka.host}:9092`,
       });
       kafkaConsumer.on("event.error", err => {
         socket.emit("log", {
