@@ -21,6 +21,15 @@ const yaml = require("js-yaml");
 const EventEmitter = require("events");
 const Kafka = require('node-rdkafka');
 
+const networkConfig = {};
+app.post('/config/:app', (req, res) => {
+  const { body, params } = req;
+  const { app } = params;
+  networkConfig[app] = body;
+  res.send('ok');
+  console.log(chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`));
+});
+
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
 
 function createPluginsDir(cb) {
@@ -193,7 +202,7 @@ createPluginsDir(err => {
 
       const kafkaConsumer = new Kafka.KafkaConsumer({
         'group.id': socket.id,
-        'metadata.broker.list': `${process.env.KAFKA_HOST}:${process.en.KAFKA_PORT}`,
+        'metadata.broker.list': `${networkConfig.kafka.host}:${networkConfig.kafka.port}`,
       });
       kafkaConsumer.on('event.error', (err) => {
         socket.emit("log", {
