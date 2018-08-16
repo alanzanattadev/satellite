@@ -5,10 +5,12 @@ import requests
 import json
 
 address = unit_get("public-address")
+SMaster = unit_get("private-address")
 relation = relations()
 idMessageBroker = relation_ids()[0]
 remoteUnit = remote_unit()
 header = {"Content-Type": "application/json"}
-payload = {"service": "neo4j", "public-address": address, "host": relation["graphdb"][idMessageBroker][remoteUnit]["private-address"], "port": 7474}
-requests.post("https://test-api-ddlrzsfdsc.now.sh/", headers=header, data=json.dumps(payload))
-
+payload = {"service": "neo4j", "public-address": address,
+           "host": relation["graphdb"][idMessageBroker][remoteUnit]["private-address"], "port": 7474}
+requests.post("http://" + SMaster + "/config/neo4j",
+              headers=header, data=json.dumps(payload))
