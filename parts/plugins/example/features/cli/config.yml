@@ -1,7 +1,7 @@
 - configuration: test with required option <okok>
   description: This is a test command
-  kubernetes-file: test
+  kubernetes-file: test.yml
 
 - configuration: another test <okok>
   description: another test command
-  kubernetes-file: test2
+  kubernetes-file: test.yml

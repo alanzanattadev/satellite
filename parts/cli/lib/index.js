@@ -101,6 +101,10 @@ socket.on("cli-config", function({ commands = [] }, callback) {
   vorpal.exec("help");
 });
 
+socket.on("logs", function({ logs }) {
+  vorpal.log(logs);
+});
+
 socket.on("connect", function() {
   vorpal.log(chalk.green(`Connected to ${serverUri}`));
 });
