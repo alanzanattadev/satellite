@@ -193,11 +193,20 @@ createPluginsDir(err => {
 
       const kafkaConsumer = new Kafka.KafkaConsumer({
         'group.id': socket.id,
-        'metadata.broker.list': `${process.env.KAFKA_ADDRESS}:9092`,
+        'metadata.broker.list': `${process.env.KAFKA_HOST}:${process.en.KAFKA_PORT}`,
+      });
+      kafkaConsumer.on('event.error', (err) => {
+        socket.emit("log", {
+          topic: "Kafka",
+          time: new Date(),
+          stream: "stderr",
+          message: `Cannot connect to Kafka to collect logs (${err.stack})`,
+          source: 'client driver',
+        });
       });
       kafkaConsumer.connect();
       kafkaConsumer.on('ready', () => {
-        kafkaConsumer.subscribe(["kube-logs"]);//, "log"]);
+        kafkaConsumer.subscribe(["kube-logs"]);
         kafkaConsumer.consume();
       });
       kafkaConsumer.on('data', (data) => {
