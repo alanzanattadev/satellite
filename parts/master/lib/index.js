@@ -19,14 +19,18 @@ const yargs = require("yargs")
     default: 8000
   }).argv;
 const chalk = require("chalk");
-const { exec } = require("child_process");
+const { exec, spawn } = require("child_process");
 const yaml = require("js-yaml");
 const EventEmitter = require("events");
 const Kafka = require("node-rdkafka");
 const template = require("swig");
 const guid = require("uuid/v4");
 
+template.setDefaults({ cache: false });
+
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
+
+const KUBECTL_BIN = process.env.KUBECTL_BIN || "kubectl";
 
 function createPluginsDir(cb) {
   fs.mkdir(pluginsDestPath, 0o755, function(err) {
@@ -238,10 +242,37 @@ function compileTemplate(filePath, args) {
   });
 }
 
+function deployOnKubernetes(deploymentFilePath) {
+  return new Promise((resolve, reject) => {
+    const command = `${KUBECTL_BIN} create -f ${deploymentFilePath}`;
+    console.log(chalk.cyan(`Executing: ${chalk.yellow(command)} ...`));
+    const kubectl = spawn(KUBECTL_BIN, ["create", "-f", deploymentFilePath]);
+    kubectl.stdout.on("data", data =>
+      console.log(`${chalk.cyan("[*]")} ${chalk.yellow(data)}`)
+    );
+    kubectl.stderr.on("data", data =>
+      console.log(`${chalk.cyan("[*]")} ${chalk.yellow(data)}`)
+    );
+    kubectl.on("error", err => {
+      console.log(chalk.red(err));
+      reject(err);
+    });
+    kubectl.on("exit", code => {
+      if (code === 0) {
+        console.log(chalk.green("Kubectl finished."));
+        resolve();
+      } else {
+        console.log(chalk.red("Kubectl couldn't create."));
+        reject("Kubectl has failed to run correctly");
+      }
+    });
+  });
+}
+
 function runCommand(command, args) {
   return getDeploymentFileFromCommand(command)
     .then(filePath => compileTemplate(filePath, args))
-    .then(deploymentFilePath => console.log(chalk.cyan(deploymentFilePath)));
+    .then(deploymentFilePath => deployOnKubernetes(deploymentFilePath));
 }
 
 createPluginsDir(err => {
@@ -296,15 +327,14 @@ createPluginsDir(err => {
             )}" with args ${JSON.stringify(data.args)}`
           )
         );
-        runCommand(data.type, data.args).then(
-          () => socket.emit("logs", { logs: chalk.green("Launched.") }),
-          err => {
+        runCommand(data.type, data.args)
+          .then(() => socket.emit("logs", { logs: chalk.green("Launched.") }))
+          .catch(err => {
             console.log(chalk.red(err.toString()));
             socket.emit("logs", {
               logs: chalk.red(`Impossible to run command:\n${err.toString()}`)
             });
-          }
-        );
+          });
       });
       socket.on("disconnect", function() {
         pluginList.emitter.removeListener("new plugin", updateCLI);
