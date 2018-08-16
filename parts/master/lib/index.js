@@ -33,7 +33,12 @@ template.setDefaults({ cache: false });
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const networkConfig = {};
+const networkConfig = {
+  kafka: { host: "0.0.0.0" },
+  neo4j: { host: "0.0.0.0" },
+  vault: { host: "0.0.0.0" },
+  kube: { host: "0.0.0.0" },
+};
 app.post('/config/:app', (req, res) => {
   const { body, params } = req;
   const { app } = params;
