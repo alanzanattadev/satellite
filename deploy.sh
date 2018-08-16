@@ -24,9 +24,13 @@ run_cmd() {
             exit 1
         elif [ $RET != "0" ]; then
             printf "${RED}Command: '$1' failed..${STD}\n"
-            printf "${CYAN}Will run '$2' and retry${STD}\n"
-            sleep 1
-            sh -c "$2"
+            printf "${CYAN}Will check '$2' and retry${STD}\n"
+            # Wait for file
+            while [ "$(test -e $2 ; echo $?)" == "1" ]; do
+                sleep 1
+            done
+            # Add permissions to file
+            sh -c "sudo chmod o+rw  $2"
             printf "${CYAN}Run: '$1' ${STD}\n"
             sh -c "$1"
             if [ $? != 0 ]; then
@@ -48,7 +52,7 @@ fi
 
 run_cmd "sudo snap install conjure-up --classic"
 run_cmd "sudo snap install lxd"
-run_cmd "/snap/bin/lxd init --preseed < ./parts/lxd/config/init-preseed.yaml" "sudo chmod o+rw /var/snap/lxd/common/lxd/unix.socket"
+run_cmd "/snap/bin/lxd init --preseed < ./parts/lxd/config/init-preseed.yaml" "/var/snap/lxd/common/lxd/unix.socket"
 run_cmd "conjure-up kubernetes-core localhost"
 
 run_cmd "juju deploy cs:kafka-40"
