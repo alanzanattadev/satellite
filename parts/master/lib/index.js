@@ -320,6 +320,7 @@ createPluginsDir(err => {
         'metadata.broker.list': `${networkConfig.kafka.host}:9092`,
       });
       kafkaConsumer.on("event.error", err => {
+        console.log(chalk.red(`Error in Kafka connection for socket id: ${socket.id} (${err.stack})`));
         socket.emit("log", {
           topic: "Kafka",
           time: new Date(),
@@ -332,6 +333,14 @@ createPluginsDir(err => {
       kafkaConsumer.on("ready", () => {
         kafkaConsumer.subscribe(["kube-logs"]);
         kafkaConsumer.consume();
+        console.log(chalk.cyan(`Connected to Kafka for socket id: ${socket.id}`));
+        socket.emit("log", {
+          topic: "Kafka",
+          time: new Date(),
+          stream: "stdout",
+          message: "Connected to Kafka via the satellite master",
+          source: "client driver"
+        });
       });
       kafkaConsumer.on("data", data => {
         const value = JSON.parse(data.value.toString());
