@@ -317,7 +317,7 @@ createPluginsDir(err => {
 
       const kafkaConsumer = new Kafka.KafkaConsumer({
         'group.id': socket.id,
-        'metadata.broker.list': `${networkConfig.kafka.host}:${networkConfig.kafka.port}`,
+        'metadata.broker.list': `${networkConfig.kafka.host}:9092`,
       });
       kafkaConsumer.on("event.error", err => {
         socket.emit("log", {
