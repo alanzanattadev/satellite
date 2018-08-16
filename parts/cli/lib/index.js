@@ -17,6 +17,11 @@ const yargs = require("yargs")
 const { exec } = require("child_process");
 const request = require("request");
 const { URL } = require("url");
+const express = require("express")
+const app = express();
+app.set('view engine', 'ejs');
+app.use(express.static('public'))
+const server = require("http").Server(app);
 
 const chalk = vorpal.chalk;
 
@@ -80,6 +85,49 @@ vorpal
     );
   });
 
+vorpal
+  .command("visu", "Prepare visualization")
+  .action((args, callback) => {
+    request.get({ url: `${new URL("/visu", serverUri)}` }, (err, http, body) => {
+        if (err || http.statusCode >= 300) {
+          vorpal.log(chalk.red("Visualization request failed:" + err));
+          return callback();
+        }
+        const json = JSON.parse(body);
+
+        const nodesWithDup = json.reduce((acc, elem) => {
+          const node0 = elem._fields[0];
+          const node1 = elem._fields[2];
+          return acc.concat([node0, node1].map((node) => ({
+            id: node.identity.low,
+            labels: node.labels,
+            properties: node.properties,
+          })));
+        }, []);
+        const nodes = nodesWithDup.filter((item, pos) => (nodesWithDup.indexOf(item) == pos));
+
+        const relationships = json.map((elem) => {
+          const relation = elem._fields[1];
+          return {
+            id: relation.identity.low,
+            type: relation.type,
+            startNode: relation.start.low,
+            endNode: relation.end.low,
+            properties: relation.properties,
+          };
+        });
+
+        app.get('/', (req, res) => {
+          res.render('index', {
+            data: { results: [{ data: [{ graph: { nodes, relationships } }] }] },
+          });
+        });
+        vorpal.log(chalk.green("Visualization available at 'http://localhost/' !"));
+        return callback();
+      }
+    );
+  });
+
 socket.on("cli-config", function({ commands = [] }, callback) {
   vorpal.log(chalk.cyan("receiving CLI config..."));
   commandsCache.forEach(command => command.remove());
@@ -101,8 +149,13 @@ socket.on("cli-config", function({ commands = [] }, callback) {
   vorpal.exec("help");
 });
 
+socket.on("logs", function({ logs }) {
+  vorpal.log(logs);
+});
+
 socket.on("connect", function() {
   vorpal.log(chalk.green(`Connected to ${serverUri}`));
+  server.listen(80)
 });
 
 socket.on("log", (log) => {

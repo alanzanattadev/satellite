@@ -6,8 +6,9 @@
 
 - pymongo
 - spotipy
-- lyricswikia (https://github.com/enricobacis/lyricwikia)
+- lyricwikia (https://github.com/enricobacis/lyricwikia)
 - neo4j-driver
+- tensorflow
 
 #### Infra
 
