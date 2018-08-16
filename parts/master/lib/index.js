@@ -326,7 +326,7 @@ createPluginsDir(err => {
           time: new Date(),
           stream: "stderr",
           message: `Cannot connect to Kafka to collect logs (${err.stack})`,
-          source: "client driver"
+          source: "Satellite"
         });
       });
       kafkaConsumer.connect();
@@ -339,7 +339,7 @@ createPluginsDir(err => {
           time: new Date(),
           stream: "stdout",
           message: "Connected to Kafka via the satellite master",
-          source: "client driver"
+          source: "Satellite"
         });
       });
       kafkaConsumer.on("data", data => {
