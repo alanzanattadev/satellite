@@ -22,6 +22,7 @@ const chalk = require("chalk");
 const { exec, spawn } = require("child_process");
 const yaml = require("js-yaml");
 const EventEmitter = require("events");
+const neo4j = require('neo4j-driver').v1;
 const Kafka = require("node-rdkafka");
 const template = require("swig");
 const guid = require("uuid/v4");
@@ -190,6 +191,16 @@ app.post("/plugins/load", upload.single("plugin"), (req, res) => {
     res.write("Invalid plugin name => " + pluginName);
     res.end();
   }
+});
+
+app.get('/visu', (req, res) => {
+  const driver = neo4j.driver(`bolt://${process.env.NEO_HOST}`, neo4j.auth.basic('neo4j', 'neo4j_pass'));
+  const session = driver.session();
+  session.run('MATCH (a)-[r]-(b) RETURN *').then(result => {
+    session.close();
+    driver.close();
+    res.send(result.records);
+  });
 });
 
 function createSocketCLIUpdater(socket) {

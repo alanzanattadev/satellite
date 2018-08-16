@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+        <title>Satellite Visualization</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css">
+        <link rel="stylesheet" href="./neo4jd3.css?v=0.0.1">
+        <style>
+            body,
+            html,
+            .neo4jd3 {
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="neo4jd3"></div>
+        <!-- Scripts -->
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="./neo4jd3.js?v=0.0.1"></script>
+        <script type="text/javascript">
+            function init() {
+                var neo4jd3 = new Neo4jd3('#neo4jd3', {
+                    neo4jData: JSON.parse('<%-JSON.stringify(data)%>'),
+                    minCollision: 60,
+                    nodeRadius: 25,
+                    onNodeDoubleClick: function(node) {
+                    },
+                    onRelationshipDoubleClick: function(relationship) {
+                    },
+                    zoomFit: true
+                });
+            }
+            window.onload = init;
+        </script>
+    </body>
+</html>
