@@ -1,4 +1,4 @@
-FROM python:2
+FROM python:2-alpine
 LABEL maintainer="jacqueslorentzdev@gmail.com"
 WORKDIR /usr/src/app
 RUN ["git", "clone", "https://github.com/rickhousley/happn"]
