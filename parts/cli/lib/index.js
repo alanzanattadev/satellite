@@ -122,7 +122,7 @@ vorpal
             data: { results: [{ data: [{ graph: { nodes, relationships } }] }] },
           });
         });
-        vorpal.log(chalk.green("Visualization available at 'http://localhost:8080/' !"));
+        vorpal.log(chalk.green("Visualization available at 'http://localhost:9123/' !"));
         return callback();
       }
     );
@@ -155,7 +155,7 @@ socket.on("logs", function({ logs }) {
 
 socket.on("connect", function() {
   vorpal.log(chalk.green(`Connected to ${serverUri}`));
-  server.listen(8080)
+  server.listen(9123)
 });
 
 socket.on("log", (log) => {
