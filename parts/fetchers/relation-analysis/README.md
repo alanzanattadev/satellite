@@ -2,10 +2,12 @@
 
 ### Install dependencies
 
-- pymongo (`pip install pymongo`)
+`pip install ...`
+- pymongo
 - langdetect
 - textblob
 - pandas
+- neo4j-driver
 
 ### Connection to mongoDB
 
@@ -45,6 +47,7 @@ I'm using pandas as data analyser for analysis for create an intelligent relatio
   - `ownerOfTheSetOfTweet`: _Important_, give the user name of the set of tweet owner, in order to give you the most accurate data analysis.
     > At launch two databases connections will be establish (`dbSrc`, `dbDest`) thank's to connection argument given above.
 
+- `procOnEachTweet()`: Draw a first analysis, then insert in database (`dbDest`) depending the filter when initalized
 - `textProcOnTweet()`: Draw a first analysis, then insert in database (`dbDest`) depending the filter when initalized
   > If the tweet is already processed and inserted in database, he will not be re-inserted again. The target/destination database will be the one given above.
 - `checkRelationsOnCreatorTweet()`: Process tweets that didnt come from you, to create relation, given:
@@ -56,7 +59,7 @@ I'm using pandas as data analyser for analysis for create an intelligent relatio
 - `checkSentiment()`: Draw a global analysis based on sentiment thank's to the previous generated data above (`textProcOnTweet()`)
   - `tweet`: The tweet
   - `Object`: Where the data will be stored
-- `checkLanguages()`: Draw a global analysis based on language used in tweet thank's to the previous generated data above (`textProcOnTweet()`)
+- `checkLanguages()`: Draw a global analysis based on language used in tweet thank's to the previous generated data above (`textProcOnTweet()`).
   - `tweet`: The tweet
   - `Object`: Where the data will be stored
 - `checkHashTags()`: Draw a global analysis based on hash_tags used in tweet thank's to the previous generated data above (`textProcOnTweet()`)
@@ -96,3 +99,49 @@ Docker Image available:
 
 - To create the image: `docker build -t twitter-analysis:1.0 ./`
 - To start the container: `docker run -it [-e var=value...] twitter-analysis:1.0`
+
+### CLI
+
+```
+usage: cli.py [-h] [-f FILTER] [-p] twitterUser
+
+positional arguments:
+  twitterUser           Twitter ID
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FILTER, --filter FILTER
+                        Filter the processed tweet
+  -p, --process         Draw a first analysis for each tweet, then insert in
+                        database (dbDest)
+```
+
+### Neo4j
+
+Graph Database
+
+#### Connecting to Neo4j
+
+Make sure to fill the following env variables:
+
+- `NEO_URI`
+  - default: `bolt://localhost:7687`
+- `ǸEO_USER`
+  - default: `neo4j`
+- `NEO_PASS`
+  - default: `neo4j`
+
+#### Neo4j API
+
+- Delete all detected languages that are present only one time, to avoid biased data.
+
+Available class: `GraphDB`
+
+### Dockerize Application
+
+Available images: Alpine Python3.6.6
+
+- Create the images:
+  - `docker build -t twitter-relation:1.0 ./`
+- Run the container:
+  - `docker run -it -e [var=value...] --network="host" twitter-relation:1.0` (`--network`, option available to share the network with the host)

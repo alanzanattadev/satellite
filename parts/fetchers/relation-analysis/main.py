@@ -7,6 +7,7 @@ from datetime import datetime
 import pandas as pd
 import os
 import re
+import collections
 
 
 class TwitterAnalysis:
@@ -35,7 +36,7 @@ class TwitterAnalysis:
     def getDataFromDb(self, filter):
         return self.clientSource.find(filter)
 
-    def textProcOnTweet(self):
+    def procOnEachTweet(self):
         count = 0
         for tweet in self.data:
             try:
@@ -83,33 +84,42 @@ class TwitterAnalysis:
 
     def checkRelationsOnCreatorTweet(self, tweet, object):
         ownerOfTweet = tweet["owner"]
+        lang = tweet["language"]
+        date = tweet["publish-date"]
         if ownerOfTweet != self.owner:
             if not ownerOfTweet in object["relations"]:
-                object["relations"][ownerOfTweet] = 1
+                object["relations"][ownerOfTweet] = {}
+                object["relations"][ownerOfTweet].update(
+                    {"count": 1, "first_interac": date, "langs": [lang]})
             else:
-                object["relations"][ownerOfTweet] = object["relations"][ownerOfTweet] + 1
+                path = object["relations"][ownerOfTweet]
+                path.update(
+                    {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date)})
+                if not lang in path["langs"]:
+                    path["langs"].append(lang)
 
     def checkRelationOnTagUser(self, tweet, object):
+        date = tweet["publish-date"]
+        lang = tweet["language"]
         for tag_user in tweet["tag_user"]:
             if tag_user != self.owner:
                 if not tag_user in object["relations"]:
-                    object["relations"][tag_user] = 1
+                    object["relations"][tag_user] = {}
+                    object["relations"][tag_user].update(
+                        {"count": 1, "first_interac": date, "langs": [lang]})
                 else:
-                    object["relations"][tag_user] = object["relations"][tag_user] + 1
+                    path = object["relations"][tag_user]
+                    path.update(
+                        {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date)})
+                    if not lang in path["langs"]:
+                        path["langs"].append(lang)
 
-    def checkSentiment(self, tweet, object):
-        sentiment = tweet["sentiment"]
-        if not sentiment in object["sentiment"]:
-            object["sentiment"][sentiment] = 1
+    def checkBasic(self, tweet, object, field):
+        fetchedTweet = tweet[field]
+        if not fetchedTweet in object[field]:
+            object[field][fetchedTweet] = 1
         else:
-            object["sentiment"][sentiment] = object["sentiment"][sentiment] + 1
-
-    def checkLanguages(self, tweet, object):
-        lang = tweet["language"]
-        if not lang in object["lang"]:
-            object["lang"][lang] = 1
-        else:
-            object["lang"][lang] = object["lang"][lang] + 1
+            object[field][fetchedTweet] = object[field][fetchedTweet] + 1
 
     def checkHashTags(self, tweet, object):
         for tags in tweet["hash_tags"]:
@@ -163,7 +173,8 @@ class TwitterAnalysis:
             "lang": {},
             "hashtags": {},
             "tweetPerDay": {},
-            "analysisDataFrame": None
+            "analysisDataFrame": None,
+            "profileUser": self.owner
         }
         timeSet = {
             "time": [],
@@ -174,19 +185,11 @@ class TwitterAnalysis:
                 tweetEntry, profile)
             self.checkRelationOnTagUser(
                 tweetEntry, profile)
-            self.checkSentiment(tweetEntry, profile)
-            self.checkLanguages(tweetEntry, profile)
+            self.checkBasic(tweetEntry, profile, "sentiment")
+            self.checkBasic(tweetEntry, profile, "language")
             self.checkHashTags(tweetEntry, profile)
             self.getTweetPerDay(tweetEntry, profile)
-        profile["relations"] = dict((x, y) for x, y in sorted(
-            profile["relations"].items(), key=lambda x: x[1], reverse=True))  # Relations with people
         self.analysisByTime(profile["tweetPerDay"], timeSet)
         df = self.createDfBasedOnTime(timeSet)
         profile["analysisDataFrame"] = df
-        print(profile)
-
-
-if __name__ == "__main__":
-    analysis = TwitterAnalysis("RossetPaul")
-    # analysis.textProcOnTweet() Process a first analysis on each tweet
-    # analysis.mapReduceOnEachTweet() Process a global analysis on the complete set of tweet to draw a first profile.
+        return profile

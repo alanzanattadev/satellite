@@ -3,11 +3,14 @@ FROM python:3.6-alpine
 
 LABEL maintainer="paulrosset96@gmail.com"
 
-RUN apk update \
-        && apk add --no-cache libxml2-dev libxslt-dev python-dev build-base \
-        && pip install twitterscraper textblob langdetect pandas  \
-        && addgroup -S -g 1001 app \
-        && adduser -S -D -h /app -u 1001 -G app app
+# Manage user privilieges
+RUN addgroup -S -g 1001 app
+RUN adduser -S -D -h /app -u 1001 -G app app
+
+# Installing dependencies
+RUN apk update
+RUN apk add --no-cache libxml2-dev libxslt-dev python-dev build-base
+RUN pip install twitterscraper textblob langdetect pandas pymongo neo4j-driver
 
 # Creating working directory
 RUN mkdir /app/src
@@ -18,4 +21,7 @@ RUN chown -R app.app /app/
 COPY ./* ./
 USER app
 
+# Determine the entrypoint
+# Launch the service:
+# python cli.py [-p] [-g] TwitterIDUser
 CMD ["/bin/sh"]
