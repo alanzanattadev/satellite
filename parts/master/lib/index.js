@@ -11,20 +11,30 @@ const yargs = require("yargs")
   .option("loadPluginsDir", {
     default: null
   })
+  .option("deploymentFilesDest", {
+    default: "/tmp/"
+  })
   .option("port", {
     alias: "p",
     default: 8000
   }).argv;
 const chalk = require("chalk");
-const { exec } = require("child_process");
+const { exec, spawn } = require("child_process");
 const yaml = require("js-yaml");
 const EventEmitter = require("events");
 const neo4j = require('neo4j-driver').v1;
+const Kafka = require("node-rdkafka");
+const template = require("swig");
+const guid = require("uuid/v4");
+
+template.setDefaults({ cache: false });
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
 
+const KUBECTL_BIN = process.env.KUBECTL_BIN || "kubectl";
+
 function createPluginsDir(cb) {
-  fs.mkdir(pluginsDestPath, 0755, function(err) {
+  fs.mkdir(pluginsDestPath, 0o755, function(err) {
     if (err) {
       if (err.code == "EEXIST") {
         console.log(chalk.green("Plugins folder already created"));
@@ -88,7 +98,18 @@ function loadPlugin(pluginPath, pluginName) {
       const pluginConfig = yaml.safeLoad(
         fs.readFileSync(`${configPath}`, "utf8")
       );
-      pluginList.addPlugin(pluginName, pluginConfig);
+      pluginList.addPlugin(
+        pluginName,
+        pluginConfig.map(c => ({
+          ...c,
+          ["kubernetes-file"]: path.join(
+            pluginPath,
+            "features",
+            "deployments",
+            c["kubernetes-file"]
+          )
+        }))
+      );
       console.log(chalk.cyan(`Loaded plugin ${pluginName}`));
       resolve();
     } catch (e) {
@@ -190,6 +211,81 @@ function createSocketCLIUpdater(socket) {
   };
 }
 
+function getDeploymentFileFromCommand(command) {
+  return new Promise((resolve, reject) => {
+    const foundCommand = pluginList
+      .getCommands()
+      .find(c => c.configuration === command);
+    if (foundCommand) resolve(foundCommand["kubernetes-file"]);
+    else reject("Deployment file not found");
+  });
+}
+
+function compileTemplate(filePath, args) {
+  return new Promise((resolve, reject) => {
+    const deploymentFile = filePath;
+    console.log(chalk.cyan(`Compiling file template ${deploymentFile}`));
+    const renderedContent = template.renderFile(deploymentFile, args);
+    console.log(renderedContent);
+    const renderedFileName = `compiled-template-${guid()}`;
+    const renderedFilePath = path.join(
+      yargs.deploymentFilesDest,
+      renderedFileName
+    );
+    console.log(chalk.cyan(`Writing rendered file to ${renderedFilePath}`));
+    const renderedFile = fs.writeFile(
+      renderedFilePath,
+      renderedContent,
+      err => {
+        if (err) {
+          console.log(
+            chalk.red(
+              `Impossible to write file ${renderedFilePath}: ${err.toString()}`
+            )
+          );
+          reject(err.toString());
+        } else {
+          console.log(chalk.green(`Deployment file ready !`));
+          resolve(renderedFilePath);
+        }
+      }
+    );
+  });
+}
+
+function deployOnKubernetes(deploymentFilePath) {
+  return new Promise((resolve, reject) => {
+    const command = `${KUBECTL_BIN} create -f ${deploymentFilePath}`;
+    console.log(chalk.cyan(`Executing: ${chalk.yellow(command)} ...`));
+    const kubectl = spawn(KUBECTL_BIN, ["create", "-f", deploymentFilePath]);
+    kubectl.stdout.on("data", data =>
+      console.log(`${chalk.cyan("[*]")} ${chalk.yellow(data)}`)
+    );
+    kubectl.stderr.on("data", data =>
+      console.log(`${chalk.cyan("[*]")} ${chalk.yellow(data)}`)
+    );
+    kubectl.on("error", err => {
+      console.log(chalk.red(err));
+      reject(err);
+    });
+    kubectl.on("exit", code => {
+      if (code === 0) {
+        console.log(chalk.green("Kubectl finished."));
+        resolve();
+      } else {
+        console.log(chalk.red("Kubectl couldn't create."));
+        reject("Kubectl has failed to run correctly");
+      }
+    });
+  });
+}
+
+function runCommand(command, args) {
+  return getDeploymentFileFromCommand(command)
+    .then(filePath => compileTemplate(filePath, args))
+    .then(deploymentFilePath => deployOnKubernetes(deploymentFilePath));
+}
+
 createPluginsDir(err => {
   if (err == null) {
     server.listen(yargs.port);
@@ -201,6 +297,38 @@ createPluginsDir(err => {
       const updateCLI = createSocketCLIUpdater(socket);
       updateCLI();
 
+      const kafkaConsumer = new Kafka.KafkaConsumer({
+        "group.id": socket.id,
+        "metadata.broker.list": `${process.env.KAFKA_HOST}:${
+          process.env.KAFKA_PORT
+        }`
+      });
+      kafkaConsumer.on("event.error", err => {
+        socket.emit("log", {
+          topic: "Kafka",
+          time: new Date(),
+          stream: "stderr",
+          message: `Cannot connect to Kafka to collect logs (${err.stack})`,
+          source: "client driver"
+        });
+      });
+      kafkaConsumer.connect();
+      kafkaConsumer.on("ready", () => {
+        kafkaConsumer.subscribe(["kube-logs"]);
+        kafkaConsumer.consume();
+      });
+      kafkaConsumer.on("data", data => {
+        const value = JSON.parse(data.value.toString());
+        const msg = JSON.parse(value.message);
+        socket.emit("log", {
+          topic: data.topic,
+          time: msg.time,
+          stream: msg.stream,
+          message: msg.log.replace(/\n/g, ""),
+          source: value.source.match(/\/var\/log\/containers\/([^_]*)_/)[1]
+        });
+      });
+
       pluginList.emitter.on("new plugin", updateCLI);
       socket.on("command", function(data) {
         console.log(
@@ -210,6 +338,14 @@ createPluginsDir(err => {
             )}" with args ${JSON.stringify(data.args)}`
           )
         );
+        runCommand(data.type, data.args)
+          .then(() => socket.emit("logs", { logs: chalk.green("Launched.") }))
+          .catch(err => {
+            console.log(chalk.red(err.toString()));
+            socket.emit("logs", {
+              logs: chalk.red(`Impossible to run command:\n${err.toString()}`)
+            });
+          });
       });
       socket.on("disconnect", function() {
         pluginList.emitter.removeListener("new plugin", updateCLI);
@@ -219,6 +355,8 @@ createPluginsDir(err => {
           )
         );
         io.emit("user disconnected");
+
+        kafkaConsumer.disconnect();
       });
     });
   }
