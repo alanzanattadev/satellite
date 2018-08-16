@@ -289,7 +289,7 @@ createPluginsDir(err => {
       const kafkaConsumer = new Kafka.KafkaConsumer({
         "group.id": socket.id,
         "metadata.broker.list": `${process.env.KAFKA_HOST}:${
-          process.en.KAFKA_PORT
+          process.env.KAFKA_PORT
         }`
       });
       kafkaConsumer.on("event.error", err => {
