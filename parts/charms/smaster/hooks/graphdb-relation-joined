@@ -11,6 +11,6 @@ idMessageBroker = relation_ids()[0]
 remoteUnit = remote_unit()
 header = {"Content-Type": "application/json"}
 payload = {"service": "neo4j", "public-address": address,
-           "host": relation["graphdb"][idMessageBroker][remoteUnit]["private-address"], "port": 7474}
+           "host": relation["graphdb"][idMessageBroker][remoteUnit]["private-address"]}
 requests.post("http://" + SMaster + "/config/neo4j",
               headers=header, data=json.dumps(payload))
