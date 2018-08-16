@@ -1,6 +1,9 @@
 FROM node:latest
 LABEL maintainer="paulrosset96@gmail.com"
 
+RUN apt update
+RUN apt install -y librdkafka-dev
+
 COPY * /home/node/
 WORKDIR /home/node/
 RUN ["yarn", "--production=true"]
