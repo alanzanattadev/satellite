@@ -36,9 +36,15 @@ app.use(bodyParser.json());
 const networkConfig = {
   kafka: { host: "0.0.0.0" },
   neo4j: { host: "0.0.0.0" },
+  mongodb: { host: "0.0.0.0" },
   vault: { host: "0.0.0.0" },
   kube: { host: "0.0.0.0" },
 };
+const defaultPorts = {
+  kafka: "9092",
+  neo4j: "7687",
+  mongodb: "27017",
+}
 app.post('/config/:app', (req, res) => {
   const { body, params } = req;
   const { app } = params;
@@ -212,7 +218,7 @@ app.post("/plugins/load", upload.single("plugin"), (req, res) => {
 });
 
 app.get('/visu', (req, res) => {
-  const driver = neo4j.driver(`bolt://${networkConfig.neo4j.host}`, neo4j.auth.basic('neo4j', 'neo4j'));
+  const driver = neo4j.driver(`bolt://${networkConfig.neo4j.host}:${defaultPorts.neo4j}`, neo4j.auth.basic('neo4j', 'neo4j'));
   const session = driver.session();
   session.run('MATCH (a)-[r]-(b) RETURN *').then(result => {
     session.close();
@@ -243,7 +249,15 @@ function compileTemplate(filePath, args) {
   return new Promise((resolve, reject) => {
     const deploymentFile = filePath;
     console.log(chalk.cyan(`Compiling file template ${deploymentFile}`));
-    const renderedContent = template.renderFile(deploymentFile, args);
+    const renderedContent = template.renderFile(deploymentFile, {
+      ...args,
+      mongodb_host: networkConfig.mongodb.host,
+      mongodb_port: defaultPorts.mongodb,
+      neo4j_host: networkConfig.neo4j.host,
+      neo4j_port: defaultPorts.neo4j,
+      kafka_host: networkConfig.kafka.host,
+      kafka_port: defaultPorts.kafka,
+    });
     console.log(renderedContent);
     const renderedFileName = `compiled-template-${guid()}`;
     const renderedFilePath = path.join(
@@ -317,7 +331,7 @@ createPluginsDir(err => {
 
       const kafkaConsumer = new Kafka.KafkaConsumer({
         'group.id': socket.id,
-        'metadata.broker.list': `${networkConfig.kafka.host}:9092`,
+        'metadata.broker.list': `${networkConfig.kafka.host}:${defaultPorts.kafka}`,
       });
       kafkaConsumer.on("event.error", err => {
         console.log(chalk.red(`Error in Kafka connection for socket id: ${socket.id} (${err.stack})`));
