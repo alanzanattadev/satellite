@@ -17,6 +17,9 @@ juju destroy-controller $CONTROLLER -y
 /snap/bin/lxc storage delete juju-zfs
 /snap/bin/lxc storage delete default
 
+echo "Remove juju wait"
+pip uninstall juju-wait -y
+
 echo "Remove LXD and Conjure-up snap"
 sudo snap remove lxd
 sudo snap remove conjure-up
