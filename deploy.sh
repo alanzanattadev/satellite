@@ -52,7 +52,7 @@ fi
 
 run_cmd "sudo snap install conjure-up --classic"
 run_cmd "sudo snap install lxd"
-run_cmd "/snap/bin/lxd init --preseed < ./parts/lxd/config/init-preseed.yaml" "/var/snap/lxd/common/lxd/unix.socket"
+run_cmd "/snap/bin/lxd init --preseed < ./config/lxd-init-preseed.yaml" "/var/snap/lxd/common/lxd/unix.socket"
 
 run_cmd "sudo apt install python-pip -y"
 run_cmd "pip install juju-wait"
@@ -72,8 +72,8 @@ run_cmd "juju add-relation kafka filebeat"
 run_cmd "juju config filebeat kube_logs=True"
 run_cmd "juju config kubernetes-master enable-dashboard-addons=False"
 
-run_cmd "juju deploy ./parts/charms/layers/neo4j"
-run_cmd "juju deploy ./parts/charms/smaster"
+run_cmd "juju deploy ./charms/layers/neo4j"
+run_cmd "juju deploy ./charms/smaster"
 run_cmd "juju add-relation neo4j smaster"
 run_cmd "juju add-relation mongodb smaster"
 run_cmd "juju add-relation kafka smaster"
