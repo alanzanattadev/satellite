@@ -20,3 +20,5 @@ requires:
     interface: kube-control
   vaultkv:
     interface: vault
+  mongodb:
+    interface: mongodb
