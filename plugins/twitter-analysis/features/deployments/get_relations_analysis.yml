@@ -22,5 +22,9 @@ spec:
               value: "{{ mongodb_port }}"
             - name: NEO_URI
               value: "bolt://{{ neo4j_host }}:{{ neo4j_port }}"
+            - name: MONGO_TWITTER_DATABASE_DEST
+              value: "twitter_analysis_database_destination"
+            - name: MONGO_TWITTER_COLLECTION_DEST
+              value: "twitter_analysis_collection_destination"
           args: ["python", "cli.py", "{{ username }}", "-p", "-g"]
       restartPolicy: Never
