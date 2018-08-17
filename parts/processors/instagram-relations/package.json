@@ -1,0 +1,21 @@
+{
+  "name": "satellite-instagram-relations-processor",
+  "version": "1.0.0",
+  "description": "Instagram relations processor for satellite",
+  "main": "sources/index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node sources/index.js",
+    "eslint": "eslint ./sources/*.js"
+  },
+  "dependencies": {
+    "mongodb": "^3.1.1",
+    "neo4j-driver": "^1.6.2",
+    "winston": "^3.0.0"
+  },
+  "devDependencies": {
+    "eslint": "4.19.1",
+    "eslint-config-airbnb-base": "^13.0.0",
+    "eslint-plugin-import": "^2.13.0"
+  }
+}
