@@ -79,6 +79,16 @@ run_cmd "juju add-relation kubernetes-master smaster"
 run_cmd "juju add-relation vault smaster"
 run_cmd "juju expose smaster"
 
-printf "${GREEN}Deployment succeed, see 'juju status'${STD}\n"
+printf "${GREEN}Deployment in progress, see 'juju status'${STD}\n"
 
-run_cmd "juju wait"
+juju wait
+while [ "$?" != "0" ]; do
+    juju wait
+done
+
+printf "${GREEN}Deployment succeed!${STD}\n"
+
+IP=$(juju status --format=yaml | sed -e '/smaster:/,/public-address/!d' | tr -d '\n' | sed -e 's/.*public-address: //')
+
+printf "${CYAN}Install the Satellite CLI with 'sudo snap install satellite'${STD}\n"
+printf "${CYAN}To run the CLI: 'satellite.cli -s $IP'${STD}\n"
