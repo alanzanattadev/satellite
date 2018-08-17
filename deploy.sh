@@ -55,7 +55,7 @@ run_cmd "sudo snap install lxd"
 run_cmd "/snap/bin/lxd init --preseed < ./parts/lxd/config/init-preseed.yaml" "/var/snap/lxd/common/lxd/unix.socket"
 
 run_cmd "sudo apt install python-pip -y"
-run_cmd "pip install juju-wait -y"
+run_cmd "pip install juju-wait"
 
 run_cmd "conjure-up kubernetes-core localhost"
 
