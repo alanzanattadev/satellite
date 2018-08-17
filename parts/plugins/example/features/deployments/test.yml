@@ -12,4 +12,5 @@ spec:
       containers:
         - name: test
           image: mongo
+          args: ["./cmd.sh", "{{ mongodb_host }}", "{{ mongodb_port }}", "{{ neo4j_host }}", "{{ neo4j_port }}", "{{ kafka_host }}", "{{ kafka_port }}"]
       restartPolicy: Never
