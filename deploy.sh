@@ -53,6 +53,10 @@ fi
 run_cmd "sudo snap install conjure-up --classic"
 run_cmd "sudo snap install lxd"
 run_cmd "/snap/bin/lxd init --preseed < ./parts/lxd/config/init-preseed.yaml" "/var/snap/lxd/common/lxd/unix.socket"
+
+run_cmd "sudo apt install python-pip -y"
+run_cmd "pip install juju-wait"
+
 run_cmd "conjure-up kubernetes-core localhost"
 
 run_cmd "juju deploy cs:kafka-40"
@@ -76,4 +80,16 @@ run_cmd "juju add-relation kubernetes-master smaster"
 run_cmd "juju add-relation vault smaster"
 run_cmd "juju expose smaster"
 
-printf "${GREEN}Deployment succeed, see 'juju status'${STD}\n"
+printf "${GREEN}Deployment in progress, see 'juju status'${STD}\n"
+
+juju wait
+while [ "$?" != "0" ]; do
+    juju wait
+done
+
+printf "${GREEN}Deployment succeed!${STD}\n"
+
+IP=$(juju status --format=yaml | sed -e '/smaster:/,/public-address/!d' | tr -d '\n' | sed -e 's/.*public-address: //')
+
+printf "${CYAN}Install the Satellite CLI with 'sudo snap install satellite'${STD}\n"
+printf "${CYAN}To run the CLI: 'satellite.cli -s $IP'${STD}\n"

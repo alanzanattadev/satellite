@@ -9,7 +9,7 @@ const yargs = require("yargs")
   })
   .option("port", {
     alias: "p",
-    default: 8000
+    default: 80
   })
   .option("protocol", {
     default: "http"
@@ -27,7 +27,7 @@ const chalk = vorpal.chalk;
 
 console.log(chalk.cyan("initializeing CLI ..."));
 const serverUri = `${yargs.protocol || "http"}://${yargs.server ||
-  "localhost"}:${yargs.port || 8000}`;
+  "localhost"}:${yargs.port}`;
 console.log(chalk.cyan("connecting to satellite master..."));
 const socket = io.connect(serverUri);
 
