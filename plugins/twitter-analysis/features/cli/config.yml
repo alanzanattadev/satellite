@@ -1,0 +1,7 @@
+- configuration: gtwit <username> [limit]
+  description: Fetch twit of the specified username
+  kubernetes-file: get_all_twit_for_user.yml
+
+- configuration: sra <username> [process] [graph]
+  description: Set a relation analysis for a given username
+  kubernetes-file: get_relations_analysis.yml
