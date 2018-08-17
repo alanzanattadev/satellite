@@ -1,0 +1,7 @@
+- configuration: happn near <token> [userID]
+  description: Get near user from last position (filter by user ID)
+  kubernetes-file: near.yml
+
+- configuration: happn area <token> <area> [userID]
+  description: Get user in the specified area, '<lat>:<lon>[:<distance in coord>]' (filter by user ID)
+  kubernetes-file: area.yml

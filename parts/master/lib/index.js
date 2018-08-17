@@ -257,6 +257,7 @@ function compileTemplate(filePath, args) {
       neo4j_port: defaultPorts.neo4j,
       kafka_host: networkConfig.kafka.host,
       kafka_port: defaultPorts.kafka,
+      uuid: guid(),
     });
     console.log(renderedContent);
     const renderedFileName = `compiled-template-${guid()}`;

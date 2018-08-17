@@ -1,0 +1,16 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: happn-location-area-{{ uuid }}
+spec:
+  template:
+    metadata:
+      labels:
+        app: happn-location-area
+    spec:
+      containers:
+        - name: happn-location-{{ uuid }}
+          image: happn-location
+          args: ["./happn/script.py", "--env HAPPN_AREA={{ area }}", "--env HAPPN_ID='{{ userID }}'", "--env HAPPN_TOKEN='{{ token }}'", "--env NEO4J_URL='bolt://{{ neo4j_host }}:{{ neo4j_port }}'"]
+      restartPolicy: Never
