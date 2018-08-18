@@ -72,7 +72,7 @@ run_cmd "juju add-relation kubernetes-master filebeat"
 run_cmd "juju add-relation kubernetes-worker filebeat"
 run_cmd "juju add-relation kafka filebeat"
 run_cmd "juju config filebeat kube_logs=True"
-run_cmd "juju config kubernetes-master enable-dashboard-addons=False"
+run_cmd "juju config kubernetes-master enable-dashboard-addons=False client_password=\"admin\""
 
 run_cmd "juju deploy $(dirname "$0")/charms/layers/neo4j"
 run_cmd "juju deploy $(dirname "$0")/charms/smaster"

@@ -3,14 +3,22 @@
 from charmhelpers.core.hookenv import unit_get, relations, relation_ids, remote_unit
 import requests
 import json
+from subprocess import call
 
 address = unit_get("public-address")
 SMaster = unit_get("private-address")
 relation = relations()
 idMessageBroker = relation_ids()[0]
 remoteUnit = remote_unit()
+kubeMasterIP = relation["kubemaster"][idMessageBroker][remoteUnit]["private-address"]
 header = {"Content-Type": "application/json"}
 payload = {"service": "kubernetes-master", "public-address": address,
-           "host": relation["kubemaster"][idMessageBroker][remoteUnit]["private-address"]}
+           "host": kubeMasterIP}
 requests.post("http://" + SMaster + "/config/kube",
               headers=header, data=json.dumps(payload))
+call(["sudo", "-u", "ubuntu", "/snap/bin/kubectl", "config", "set-cluster", "juju",
+      "--insecure-skip-tls-verify=true", "--server=https://" + kubeMasterIP + ":6443"])
+call(["sudo", "-u", "ubuntu", "/snap/bin/kubectl", "config",
+      "set-credentials", "admin/juju", "--username=admin", "--password=admin"])
+call(["sudo", "-u", "ubuntu", "/snap/bin/kubectl",
+      "config", "set-context", "--user=admin/juju"])
