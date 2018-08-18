@@ -93,6 +93,7 @@ run_cmd "sudo docker push $REGISTRY_IP:5000/smaster"
 run_cmd "echo \"echo \\\"{ \\\\\\\"insecure-registries\\\\\\\":[\\\\\\\"$REGISTRY_IP:5000\\\\\\\"] }\\\" | sudo tee /etc/docker/daemon.json\" >> $(dirname "$0")/charms/smaster/hooks/install"
 run_cmd "echo \"sudo service docker restart\" >> $(dirname "$0")/charms/smaster/hooks/install"
 run_cmd "echo \"docker pull $REGISTRY_IP:5000/smaster\" >> $(dirname "$0")/charms/smaster/hooks/install"
+run_cmd "echo \"docker run -i -t -d -p 80:8000 -v /home/ubuntu/.kube/config:/root/.kube/config $REGISTRY_IP:5000/smaster\" >> $(dirname "$0")/charms/smaster/hooks/start"
 
 run_cmd "juju deploy $(dirname "$0")/charms/smaster"
 run_cmd "juju add-relation neo4j smaster"
