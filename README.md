@@ -122,7 +122,7 @@ You have access to a visualizer on http://localhost:9123/ (on the same machine a
 
 - install nodejs yarn
 - cd into cli
-- yarn
+- `yarn`
 - launch CLI with `yarn start -s $ip`
 
 ### Code: Master
@@ -130,25 +130,25 @@ You have access to a visualizer on http://localhost:9123/ (on the same machine a
 - install build-essentials python librdkafka-dev nodejs yarn
 - cd into master folder
 - code
-- docker build -t satellite-master .
-- juju status
+- `docker build -t satellite-master .`
+- `juju status`
 - get the docker registry ip
-- docker push ip:5000/satellite-master
-- juju charm-upgrade smaster
+- `docker push ip:5000/satellite-master`
+- `juju charm-upgrade smaster`
 
 Troubleshoot with:
 
-- juju ssh smaster
-- docker logs $(docker ps -q)
+- `juju ssh smaster`
+- `docker logs $(docker ps -q)`
 
 ### Code: Plugin configuration
 
-- juju status
+- `juju status`
 - cd into plugin directory
 - code scripts you need, and give them the IPs they need for MongoDB and Neo4J
 - code and iterate by starting them manually
-- docker build -t pluginname .
-- docker push ip:5000/pluginname
+- `docker build -t pluginname .`
+- `docker push ip:5000/pluginname`
 - launch the CLI with `satellite.cli -s $ip`
 - run `load plugin ./`
 - exec the plugin commands
@@ -159,7 +159,7 @@ Troubleshoot with:
 
 ### Code: Plugin code
 
-- juju status
+- `juju status`
 - cd into plugin directory
 - code scripts you need, and give them the IPs they need for MongoDB and Neo4J
 - code and iterate by starting them manually
@@ -168,18 +168,18 @@ Troubleshoot with:
 
 This is the iteration loop
 
-- docker build -t pluginname .
-- docker push ip:5000/pluginname
+- `docker build -t pluginname .`
+- `docker push ip:5000/pluginname`
 - exec the plugin commands
 - iterate
 
 ### Code: Deployment
 
-- ./deploy.sh
+- `./deploy.sh`
 - check if everything works with juju status
 - try to use it
 - modify deployment code
-- ./clean.sh
+- `./clean.sh`
 - iterate
 
 ### End: Clean
