@@ -1,5 +1,5 @@
 from charms.reactive import when, when_not, set_state
-from subprocess import call
+#from subprocess import call
 from charmhelpers.core.hookenv import relations, relation_ids, remote_unit
 
 
@@ -19,12 +19,12 @@ def install_smaster():
     set_state('smaster.installed')
 
 
-@when('kubemaster.relation.joined')
-def setCluster_config():
-    relation = relations()
-    idKubeMaster = relation_ids()[0]
-    remoteUnit = remote_unit()
-    kubeMasterIP = relation["kubemaster"][idKubeMaster][remoteUnit]["private-address"]
-    call(["kubectl", "config", "set-cluster", "juju",
-          "--insecure-skip-tls-verify=true", "--server=http://" + kubeMasterIP])  # Get Kubemaster IP address.
-    set_state("kubemaster.relation.joined")
+# @when('kubemaster.relation.joined')
+# def setCluster_config():
+#     relation = relations()
+#     idKubeMaster = relation_ids()[0]
+#     remoteUnit = remote_unit()
+#     kubeMasterIP = relation["kubemaster"][idKubeMaster][remoteUnit]["private-address"]
+#     call(["kubectl", "config", "set-cluster", "juju",
+#           "--insecure-skip-tls-verify=true", "--server=http://" + kubeMasterIP])  # Get Kubemaster IP address.
+#     set_state("kubemaster.relation.joined")
