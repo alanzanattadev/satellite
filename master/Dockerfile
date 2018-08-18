@@ -13,10 +13,11 @@ RUN echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/ap
 RUN apt-get update
 RUN apt-get install -y kubectl
 
+COPY ../plugins /home/node/plugins
 COPY * /home/node/
 WORKDIR /home/node/
 
 RUN ["yarn", "--production=true"]
 
 EXPOSE 8000
-ENTRYPOINT ["node", "index.js"]
+ENTRYPOINT ["node", "index.js", "--loadPluginsDir", "./plugins"]
