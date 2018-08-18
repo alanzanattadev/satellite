@@ -75,6 +75,21 @@ run_cmd "juju config filebeat kube_logs=True"
 run_cmd "juju config kubernetes-master enable-dashboard-addons=False client_password=\"admin\""
 
 run_cmd "juju deploy $(dirname "$0")/charms/layers/neo4j"
+
+printf "${GREEN}Deployment in progress, wait for the Docker Registry${STD}\n"
+
+juju wait
+while [ "$?" != "0" ]; do
+    juju wait
+done
+
+REGISTRY_IP=$(juju status --format=yaml | sed -e '/docker-registry:/,/public-address/!d' | tr -d '\n' | sed -e 's/.*public-address: //')
+
+run_cmd "$(dirname "$0")/docker.sh $REGISTRY_IP"
+run_cmd "sudo docker build -t smaster:1.0 $(dirname "$0")/master"
+run_cmd "echo \"docker push $REGISTRY_IP:5000/smaster\""
+run_cmd "echo \"docker pull $REGISTRY_IP:5000/smaster\" >> $(dirname "$0")/charms/smaster/hooks/install"
+
 run_cmd "juju deploy $(dirname "$0")/charms/smaster"
 run_cmd "juju add-relation neo4j smaster"
 run_cmd "juju add-relation mongodb smaster"
@@ -83,7 +98,8 @@ run_cmd "juju add-relation kubernetes-master smaster"
 run_cmd "juju add-relation vault smaster"
 run_cmd "juju expose smaster"
 
-printf "${GREEN}Deployment in progress, see 'juju status'${STD}\n"
+# PLUGINS
+printf "${GREEN}Deployment in progress, wait for the Satellite Master and plugins build${STD}\n"
 
 juju wait
 while [ "$?" != "0" ]; do
@@ -92,7 +108,7 @@ done
 
 printf "${GREEN}Deployment succeed!${STD}\n"
 
-IP=$(juju status --format=yaml | sed -e '/smaster:/,/public-address/!d' | tr -d '\n' | sed -e 's/.*public-address: //')
+MASTER_IP=$(juju status --format=yaml | sed -e '/smaster:/,/public-address/!d' | tr -d '\n' | sed -e 's/.*public-address: //')
 
 printf "${CYAN}Install the Satellite CLI with 'sudo snap install satellite'${STD}\n"
-printf "${CYAN}To run the CLI: 'satellite.cli -s $IP'${STD}\n"
+printf "${CYAN}To run the CLI: 'satellite.cli -s $MASTER_IP'${STD}\n"
