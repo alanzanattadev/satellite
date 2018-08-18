@@ -104,15 +104,22 @@ run_cmd "juju add-relation vault smaster"
 run_cmd "juju add-relation docker-registry smaster"
 run_cmd "juju expose smaster"
 
-# PLUGINS
-
 if [ $ACTUAL_STEP -gt $RESUME_STEP ]; then
-    printf "${GREEN}Deployment in progress, wait for the Satellite Master and plugins build${STD}\n"
+    printf "${GREEN}Deployment in progress, wait for the Satellite Master${STD}\n"
     juju wait
     while [ "$?" != "0" ]; do
         juju wait
     done
 fi
+
+# Push modules to docker registry
+for modulePath in $(dirname "$0")/modules/*; do
+    module=${modulePath##*/}
+    printf "${CYAN}Push $module docker image on the docker registry${STD}\n"
+    run_cmd "sudo docker build -t $module $(dirname "$0")/modules/$module"
+    run_cmd "sudo docker tag $module $REGISTRY_IP:5000/$module"
+    run_cmd "sudo docker push $REGISTRY_IP:5000/$module"
+done
 
 printf "${GREEN}Deployment succeed!${STD}\n"
 
