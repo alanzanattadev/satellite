@@ -12,10 +12,10 @@ RUN echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/ap
 RUN apt-get update
 RUN apt-get install -y librdkafka-dev unzip git kubectl
 
-RUN git clone https://github.com/alanzanattadev/satellite
-
 COPY * /home/node/
 WORKDIR /home/node/
+
+RUN git clone https://github.com/alanzanattadev/satellite
 
 RUN ["yarn", "--production=true"]
 
