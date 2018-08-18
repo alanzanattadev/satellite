@@ -99,6 +99,7 @@ run_cmd "juju add-relation mongodb smaster"
 run_cmd "juju add-relation kafka smaster"
 run_cmd "juju add-relation kubernetes-master smaster"
 run_cmd "juju add-relation vault smaster"
+run_cmd "juju add-relation docker-registry smaster"
 run_cmd "juju expose smaster"
 
 # PLUGINS
