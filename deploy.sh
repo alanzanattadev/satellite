@@ -35,7 +35,7 @@ run_cmd() {
             sh -c "$1"
             if [ $? != 0 ]; then
                 printf "${RED}Command: '$1' failed..${STD}\n"
-                printf "${RED}To resume deploy from this step, execute '$0 $ACTUAL_STEP'${STD}\n"
+                printf "${RED}To resume deploy from this step, execute '$0 $(($ACTUAL_STEP-1))'${STD}\n"
                 exit 1
             fi
         fi
