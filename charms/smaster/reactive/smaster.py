@@ -1,5 +1,4 @@
 from charms.reactive import when, when_not, set_state
-from charmhelpers.core.hookenv import relations, relation_ids, remote_unit
 
 
 @when_not('smaster.installed')
