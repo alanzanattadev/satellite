@@ -5,8 +5,8 @@
 ### Operating System
 
 - Download and install Ubuntu 18.04 LTS
-- `git clone https://github.com/alanzanattadev/satellite && cd satellite`
-- `./deploy.sh` and follow instructions
+- `snap install satellite`
+- `satellite.deploy` and follow instructions
 
 You can monitor units with `juju status` or via the web gui with `juju gui`.
 
@@ -94,24 +94,94 @@ You can load again to apply modifications of a plugin and so iterate while devel
 
 Reload master to reload the plugin
 
-## Contribute
+## Workflow
 
-### CLI
+### Install
 
-- cd into parts/cli
-- yarn
-- yarn start
+run `snap install satellite`
 
-### Master
+### Start: Deploy
 
-- Install build-essentials python librdkafka-dev
-- cd into parts/master
-- yarn
-- yarn start
+run `satellite.deploy`
 
-### Instagram fetcher
+The master IP will be displayed at the end.
+We'll use it as "$ip"
 
-- Install build-essentials
-- cd into parts/instagram-fetcher
-- yarn
-- yarn start
+run `satellite.cli -s $ip`
+
+### Use
+
+Load plugins you want to load with `load plugin ../plugin/testplugin`
+
+You'll have now access to new commands.
+Launch some commands, you'll see the progress through grey logs on the CLI.
+
+You have access to a visualizer on http://localhost:9123/ (on the same machine as the CLI)
+
+### Code: CLI
+
+- install nodejs yarn
+- cd into cli
+- `yarn`
+- launch CLI with `yarn start -s $ip`
+
+### Code: Master
+
+- install build-essentials python librdkafka-dev nodejs yarn
+- cd into master folder
+- code
+- `docker build -t satellite-master .`
+- `juju status`
+- get the docker registry ip
+- `docker push ip:5000/satellite-master`
+- `juju charm-upgrade smaster`
+
+Troubleshoot with:
+
+- `juju ssh smaster`
+- `docker logs $(docker ps -q)`
+
+### Code: Plugin configuration
+
+- `juju status`
+- cd into plugin directory
+- code scripts you need, and give them the IPs they need for MongoDB and Neo4J
+- code and iterate by starting them manually
+- `docker build -t pluginname .`
+- `docker push ip:5000/pluginname`
+- launch the CLI with `satellite.cli -s $ip`
+- run `load plugin ./`
+- exec the plugin commands
+- see the output on the CLI
+- modify the configuration
+- run `load plugin ./` again
+- reexec the plugin commands
+
+### Code: Plugin code
+
+- `juju status`
+- cd into plugin directory
+- code scripts you need, and give them the IPs they need for MongoDB and Neo4J
+- code and iterate by starting them manually
+- launch the CLI with `satellite.cli -s $ip`
+- run `load plugin ./`
+
+This is the iteration loop
+
+- `docker build -t pluginname .`
+- `docker push ip:5000/pluginname`
+- exec the plugin commands
+- iterate
+
+### Code: Deployment
+
+- `./deploy.sh`
+- check if everything works with juju status
+- try to use it
+- modify deployment code
+- `./clean.sh`
+- iterate
+
+### End: Clean
+
+run `satellite.clean`
