@@ -76,7 +76,7 @@ run_cmd "juju config kubernetes-master enable-dashboard-addons=False client_pass
 
 run_cmd "juju deploy $(dirname "$0")/charms/layers/neo4j"
 
-if [ $ACTUAL_STEP -lt $RESUME_STEP ]; then
+if [ $ACTUAL_STEP -le $RESUME_STEP ]; then
     printf "${GREEN}Deployment in progress, wait for the Docker Registry, see 'juju status'${STD}\n"
     juju wait
     while [ "$?" != "0" ]; do
@@ -101,7 +101,7 @@ run_cmd "juju expose smaster"
 
 # PLUGINS
 
-if [ $ACTUAL_STEP -lt $RESUME_STEP ]; then
+if [ $ACTUAL_STEP -le $RESUME_STEP ]; then
     printf "${GREEN}Deployment in progress, wait for the Satellite Master and plugins build${STD}\n"
     juju wait
     while [ "$?" != "0" ]; do
