@@ -22,5 +22,5 @@ requires:
     interface: vault
   mongodb:
     interface: mongodb
-  dockerhost:
-    interface: dockerhost
+  docker-registry:
+    interface: http
