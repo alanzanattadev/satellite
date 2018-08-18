@@ -76,7 +76,7 @@ run_cmd "juju config kubernetes-master enable-dashboard-addons=False client_pass
 
 run_cmd "juju deploy $(dirname "$0")/charms/layers/neo4j"
 
-printf "${GREEN}Deployment in progress, wait for the Docker Registry${STD}\n"
+printf "${GREEN}Deployment in progress, wait for the Docker Registry, see 'juju status'${STD}\n"
 
 juju wait
 while [ "$?" != "0" ]; do
