@@ -27,6 +27,4 @@ def setCluster_config():
     kubeMasterIP = relation["kubemaster"][idKubeMaster][remoteUnit]["private-address"]
     call(["kubectl", "config", "set-cluster", "juju",
           "--insecure-skip-tls-verify=true", "--server=http://" + kubeMasterIP])  # Get Kubemaster IP address.
-
-
-set_state("kubemaster.relation.joined")
+    set_state("kubemaster.relation.joined")
