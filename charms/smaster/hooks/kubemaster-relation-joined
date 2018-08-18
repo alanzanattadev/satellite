@@ -17,4 +17,4 @@ payload = {"service": "kubernetes-master", "public-address": address,
 requests.post("http://" + SMaster + "/config/kube",
               headers=header, data=json.dumps(payload))
 call(["kubectl", "config", "set-cluster", "juju",
-      "--insecure-skip-tls-verify=true", "--server=http://" + kubeMasterIP])
+      "--insecure-skip-tls-verify=true", "--server=https://" + kubeMasterIP + ":6443"])

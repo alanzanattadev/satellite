@@ -2,5 +2,5 @@
 set -e
 sudo -u ubuntu /snap/bin/kubectl config set-context juju --cluster=juju
 sudo -u ubuntu /snap/bin/kubectl config use-context juju
-docker run -i -t -d -p 80:8000 -v /home/ubuntu/.kube/config:/home/node/.kube/config supa/smaster
+docker run -i -t -d -p 80:8000 -v /home/ubuntu/.kube/config:/root/.kube/config supa/smaster
 status-set active "Active Docker container on port 80"
