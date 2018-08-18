@@ -87,8 +87,9 @@ fi
 REGISTRY_IP=$(juju status --format=yaml | sed -e '/docker-registry:/,/public-address/!d' | tr -d '\n' | sed -e 's/.*public-address: //')
 
 run_cmd "$(dirname "$0")/docker.sh $REGISTRY_IP"
-run_cmd "sudo docker build -t smaster:1.0 $(dirname "$0")/master"
-run_cmd "echo \"docker push $REGISTRY_IP:5000/smaster\""
+run_cmd "sudo docker build -t smaster $(dirname "$0")/master"
+run_cmd "sudo docker tag smaster $REGISTRY_IP:5000/smaster"
+run_cmd "sudo docker push $REGISTRY_IP:5000/smaster"
 run_cmd "echo \"echo \\\"{ \\\\\\\"insecure-registries\\\\\\\":[\\\\\\\"$REGISTRY_IP:5000\\\\\\\"] }\\\" | sudo tee /etc/docker/daemon.json\" >> $(dirname "$0")/charms/smaster/hooks/install"
 run_cmd "echo \"sudo service docker restart\" >> $(dirname "$0")/charms/smaster/hooks/install"
 run_cmd "echo \"docker pull $REGISTRY_IP:5000/smaster\" >> $(dirname "$0")/charms/smaster/hooks/install"
