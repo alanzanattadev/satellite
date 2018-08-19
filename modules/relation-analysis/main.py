@@ -194,8 +194,4 @@ class TwitterAnalysis:
         self.analysisByTime(profile["tweetPerDay"], timeSet)
         df = self.createDfBasedOnTime(timeSet)
         profile["analysisDataFrame"] = df
-        self.setUpDb("MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE",
-                     "twitter_collection_res-"+self.owner).insert_one(profile)
-        print(
-            "INFO: Global result inserted in base, at: twitter_collection_res-"+self.owner)
         return profile
