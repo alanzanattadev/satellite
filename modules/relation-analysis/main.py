@@ -14,24 +14,22 @@ class TwitterAnalysis:
     def __init__(self, ownerOfTheSetOfTweet, filterOnTwit={}):
         self.owner = ownerOfTheSetOfTweet
         self.clientSource = self.setUpDb(
-            "MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "src")
+            "MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "twitter_collection-"+ownerOfTheSetOfTweet)
         self.clientDest = self.setUpDb(
-            "MONGO_HOST_DEST", "MONGO_PORT_DEST", "MONGO_TWITTER_DATABASE_DEST", "dest")
+            "MONGO_HOST_DEST", "MONGO_PORT_DEST", "MONGO_TWITTER_DATABASE_DEST", "twitter_collection_dest-"+ownerOfTheSetOfTweet)
         self.data = self.getDataFromDb(filterOnTwit)
 
-    def setUpDb(self, host, port, db, target):
+    def setUpDb(self, host, port, db, collection):
         try:
             mongo_host = os.environ.get(host, "localhost")
             mongo_port = os.environ.get(port, 27017)
             mongo_database = os.environ.get(
                 db, "twitter_database")
-            mongo_collection = "twitter_collection-" + \
-                self.owner if target == "src" else "twitter_collection_dest-" + self.owner
             client = MongoClient(mongo_host, mongo_port)[
-                mongo_database][mongo_collection]
-            if target == "src" and client.count() == 0:
+                mongo_database][collection]
+            if collection == "twitter_collection-"+self.owner and client.count() == 0:
                 raise Exception(
-                    "There is no data in the source database: " + mongo_collection)
+                    "There is no data in the source database: " + collection)
             return client
         except Exception as err:
             print("Error when connecting to SOURCE database: " + str(err))
