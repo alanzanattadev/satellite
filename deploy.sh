@@ -58,6 +58,7 @@ run_cmd "sudo apt install python-pip -y"
 run_cmd "pip install juju-wait"
 
 run_cmd "conjure-up kubernetes-core localhost"
+run_cmd "juju model-config logging-config=\"<root>=WARNING;unit=WARNING\""
 
 run_cmd "juju deploy cs:kafka-40"
 run_cmd "juju deploy cs:zookeeper-42"

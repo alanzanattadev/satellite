@@ -359,15 +359,15 @@ createPluginsDir(err => {
       });
       kafkaConsumer.on("data", data => {
         const value = JSON.parse(data.value.toString());
-        if (data.topic === 'log') {
+        if (data.topic === 'log' && value.source.includes('/var/log/juju/')) {
           socket.emit("log", {
             topic: data.topic,
             time: value['@timestamp'],
             stream: 'stdout',
             message: value.message,
-            source: value.source
+            source: value.source.replace('/var/log/juju/', '')
           });
-        } else {
+        } else if (data.topic === 'kube-logs') {
           const msg = JSON.parse(value.message);
           socket.emit("log", {
             topic: data.topic,
@@ -401,7 +401,7 @@ createPluginsDir(err => {
               topic: "Master",
               time: new Date(),
               stream: "stderr",
-              message: `Impossible to run command: ${err.toString()}`,
+              message: `Impossible to the run command: ${err.toString()}`,
               source: "Satellite",
             });
           });
