@@ -20,5 +20,4 @@ call(["sudo", "-u", "ubuntu", "/snap/bin/kubectl", "config", "set-cluster", "juj
       "--insecure-skip-tls-verify=true", "--server=https://" + kubeMasterIP + ":6443"])
 call(["sudo", "-u", "ubuntu", "/snap/bin/kubectl", "config",
       "set-credentials", "admin/juju", "--username=admin", "--password=admin"])
-call(["sudo", "-u", "ubuntu", "/snap/bin/kubectl",
-      "config", "set-context", "--user=admin/juju"])
+call(["sudo", "-u", "ubuntu", "/snap/bin/kubectl", "config", "set-context", "--user=admin"])
