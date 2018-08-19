@@ -22,24 +22,24 @@ class GraphDB:
     def createOneNodeRelation(self, name, msglog):
         with self.driver.session() as session:
             print(msglog)
-            return session.run("CREATE (a:TwitterAccount {name: $name})", name=name.encode("ascii", "ignore").decode())
+            return session.run("MERGE (a:TwitterAccount {name: $name})", name=name.encode("ascii", "ignore").decode())
 
     def createNodeLang(self, lang, data):
         with self.driver.session() as session:
             print("Log: Creation of Lang node " + lang)
-            return session.run("CREATE (a:Language {name: $lang, used: $data})", lang=lang.encode("ascii", "ignore").decode(), data=data)
+            return session.run("MERGE (a:Language {name: $lang, used: $data})", lang=lang.encode("ascii", "ignore").decode(), data=data)
 
     @staticmethod
     def createRelationUser(tx, user, data, owner):
         print("Log: Creation of User relation " +
               user.encode("ascii", "ignore").decode())
-        return tx.run("MATCH (a:TwitterAccount) WHERE a.name = $nameA CREATE (b:TwitterAccount {name: $nameB})-[r:RELATION {interactions: $interac, first_interaction: $firstI}]->(a)", nameA=owner, nameB=user.encode("ascii", "ignore").decode(), interac=data["count"], firstI=data["first_interac"].strftime("%d/%m/%Y"))
+        return tx.run("MATCH (a:TwitterAccount) WHERE a.name = $nameA MERGE (b:TwitterAccount {name: $nameB})-[r:RELATION {interactions: $interac, first_interaction: $firstI}]->(a)", nameA=owner, nameB=user.encode("ascii", "ignore").decode(), interac=data["count"], firstI=data["first_interac"].strftime("%d/%m/%Y"))
 
     @staticmethod
     def createRelationLangToUsers(tx, user, lang):
         print("Log: Creation of RelationShip between Lang and User")
         return tx.run(
-            "MATCH (a:TwitterAccount),(b:Language) WHERE a.name = $user AND b.name = $lang CREATE (a)-[r:RELANG]->(b)", user=user.encode("ascii", "ignore").decode(), lang=lang.encode("ascii", "ignore").decode())
+            "MATCH (a:TwitterAccount),(b:Language) WHERE a.name = $user AND b.name = $lang MERGE (a)-[r:RELANG]->(b)", user=user.encode("ascii", "ignore").decode(), lang=lang.encode("ascii", "ignore").decode())
 
     def fetchNodesRelatedProfile(self):
         with self.driver.session() as session:
