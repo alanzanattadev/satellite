@@ -68,6 +68,7 @@ run_cmd "juju deploy cs:~jacekn/docker-registry-0"
 
 run_cmd "juju add-relation kafka zookeeper"
 run_cmd "juju add-relation kubernetes-worker docker-registry"
+run_cmd "juju add-relation kubernetes-worker filebeat"
 run_cmd "juju add-relation kubernetes-master filebeat"
 run_cmd "juju add-relation kafka filebeat"
 run_cmd "juju config filebeat kube_logs=True"

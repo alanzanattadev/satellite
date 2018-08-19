@@ -365,7 +365,7 @@ createPluginsDir(err => {
             time: value['@timestamp'],
             stream: 'stdout',
             message: value.message,
-            source: value.source.match(/\/var\/log\/juju\/(.*)\.log/)[1]
+            source: value.source
           });
         } else {
           const msg = JSON.parse(value.message);
