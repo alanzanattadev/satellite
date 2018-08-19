@@ -4,6 +4,7 @@ import satellipy.configuration.mongo as MongoConf
 import satellipy.ai.model as Model
 import satellipy.ai.predict as Predictor
 import satellipy.configuration.neo4j as Neo4JConf
+import satellipy.analysis.personalities as Personalities
 
 
 if __name__ == "__main__":
@@ -22,17 +23,4 @@ if __name__ == "__main__":
     results = Predictor.predict_for_user(
         username, model,
         emotions_collection, audio_features_collection)
-    with cl.session() as session:
-        output = session.write_transaction(lambda tx: tx.run(
-            "MERGE (sa:SpotifyAccount { spotify_id: $spotifyID }) "
-            "ON CREATE SET sa.spotify_id = $spotifyID "
-            + " ".join(
-                (("MERGE (%(type)s:Personality { personality: '%(type)s' }) "
-                    "ON CREATE SET %(type)s.personality = '%(type)s' "
-                    "CREATE (sa)-[r%(type)s:HAS_PERSONALITY { probability: %(probability)s }]->(%(type)s)")
-                    % result
-                if result['probability'] > 0.3 else "" for result in results)
-            )
-            + "RETURN sa",
-            spotifyID=username
-        ))
+    Personalities.store_personalities(cl, username, results)
