@@ -36,4 +36,3 @@ if __name__ == "__main__":
             + "RETURN sa",
             spotifyID=username
         ))
-        print(output.single()[0])
