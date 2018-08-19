@@ -8,6 +8,8 @@ import pandas as pd
 import os
 import re
 import collections
+import numpy
+import json
 
 
 class TwitterAnalysis:
@@ -92,11 +94,11 @@ class TwitterAnalysis:
             if not ownerOfTweet in object["relations"]:
                 object["relations"][ownerOfTweet] = {}
                 object["relations"][ownerOfTweet].update(
-                    {"count": 1, "first_interac": date, "langs": [lang]})
+                    {"count": 1, "first_interac": date.strftime("%Y-%m-%d"), "langs": [lang]})
             else:
                 path = object["relations"][ownerOfTweet]
                 path.update(
-                    {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date)})
+                    {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date.strftime("%Y-%m-%d"))})
                 if not lang in path["langs"]:
                     path["langs"].append(lang)
 
@@ -108,11 +110,11 @@ class TwitterAnalysis:
                 if not tag_user in object["relations"]:
                     object["relations"][tag_user] = {}
                     object["relations"][tag_user].update(
-                        {"count": 1, "first_interac": date, "langs": [lang]})
+                        {"count": 1, "first_interac": date.strftime("%Y-%m-%d"), "langs": [lang]})
                 else:
                     path = object["relations"][tag_user]
                     path.update(
-                        {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date)})
+                        {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date.strftime("%Y-%m-%d"))})
                     if not lang in path["langs"]:
                         path["langs"].append(lang)
 
@@ -194,4 +196,12 @@ class TwitterAnalysis:
         self.analysisByTime(profile["tweetPerDay"], timeSet)
         df = self.createDfBasedOnTime(timeSet)
         profile["analysisDataFrame"] = df
+        self.setUpDb("MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "twitter_collection_res-" +
+                     self.owner).insert({"result": json.dumps(profile, default=self.default)})
+        print("INFO: Inserted total result of your profile, at: twitter_collection_res-"+self.owner)
         return profile
+
+    def default(self, o):
+        if isinstance(o, numpy.int64):
+            return int(o)
+        raise TypeError

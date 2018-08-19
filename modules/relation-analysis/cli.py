@@ -3,6 +3,8 @@
 import argparse
 from main import TwitterAnalysis
 from graph import GraphDB
+import json
+import numpy
 
 
 def main():
@@ -23,6 +25,13 @@ def main():
     if args.graph and dataProfile:
         graph = GraphDB(dataProfile)
         graph.fetchNodesRelatedProfile()
+    print(json.dumps(dataProfile, default=default))
+
+
+def default(o):
+    if isinstance(o, numpy.int64):
+        return int(o)
+    raise TypeError
 
 
 if __name__ == "__main__":
