@@ -1,0 +1,24 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: instagram-fetcher-{{ uuid }}
+spec:
+  template:
+    metadata:
+      labels:
+        app: instagram-fetcher
+    spec:
+      containers:
+        - name: instagram-fetcher-{{ uuid }}
+          image: instagram-fetcher
+          env:
+            - name: MONGODB_URL
+              value: "mongodb://{{ mongodb_host }}:{{ mongodb_port }}"
+            - name: IG_USERID
+              value: "{{ userID }}"
+            - name: IG_USERNAME
+              value: "{{ user }}"
+            - name: IG_PASSWORD
+              value: "{{ password }}"
+      restartPolicy: Never

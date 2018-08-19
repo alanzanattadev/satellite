@@ -12,5 +12,14 @@ spec:
       containers:
         - name: happn-location-{{ uuid }}
           image: happn-location
-          args: ["./happn/script.py", "--env HAPPN_AREA={{ area }}", "--env HAPPN_ID='{{ userID }}'", "--env HAPPN_TOKEN='{{ token }}'", "--env NEO4J_URL='bolt://{{ neo4j_host }}:{{ neo4j_port }}'"]
+          env:
+            - name: NEO4J_URL
+              value: "bolt://{{ neo4j_host }}:{{ neo4j_port }}"
+            - name: HAPPN_AREA
+              value: "{{ area }}"
+            - name: HAPPN_ID
+              value: "{{ userID }}"
+            - name: HAPPN_TOKEN
+              value: "{{ token }}"
+          args: ["python", "./happn/script.py"]
       restartPolicy: Never

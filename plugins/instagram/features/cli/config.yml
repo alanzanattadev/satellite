@@ -1,0 +1,11 @@
+- configuration: instagram fetch <userID> <user> <password>
+  description: Fetch data from user with userID, use user and password to login
+  kubernetes-file: fetch.yml
+
+- configuration: instagram locations <userID>
+  description: Process locations from user with userID
+  kubernetes-file: locations.yml
+
+- configuration: instagram relations <userID>
+  description: Process relations from user with userID
+  kubernetes-file: relations.yml
