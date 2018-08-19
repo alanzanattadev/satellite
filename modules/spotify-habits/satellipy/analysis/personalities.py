@@ -7,7 +7,7 @@ def store_personalities(driver, username, results):
             + " ".join(
                 (("MERGE (%(type)s:Personality { personality: '%(type)s' }) "
                     "ON CREATE SET %(type)s.personality = '%(type)s' "
-                    "CREATE (sa)-[r%(type)s:HAS_PERSONALITY { probability: %(probability)s }]->(%(type)s)")
+                    "MERGE (sa)-[r%(type)s:HAS_PERSONALITY]->(%(type)s) SET r%(type)s.probability = %(probability)s")
                     % result
                 if result['probability'] > 0.3 else "" for result in results)
             )
