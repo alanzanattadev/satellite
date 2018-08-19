@@ -33,7 +33,7 @@ class GraphDB:
     def createRelationUser(tx, user, data, owner):
         print("Log: Creation of User relation " +
               user.encode("ascii", "ignore").decode())
-        return tx.run("MATCH (a:TwitterAccount) WHERE a.name = $nameA MERGE (b:TwitterAccount {name: $nameB})-[r:RELATION {interactions: $interac, first_interaction: $firstI}]->(a)", nameA=owner, nameB=user.encode("ascii", "ignore").decode(), interac=data["count"], firstI=data["first_interac"].strftime("%d/%m/%Y"))
+        return tx.run("MATCH (a:TwitterAccount) WHERE a.name = $nameA MERGE (b:TwitterAccount {name: $nameB})-[r:RELATION {interactions: $interac, first_interaction: $firstI}]->(a)", nameA=owner, nameB=user.encode("ascii", "ignore").decode(), interac=data["count"], firstI=data["first_interac"])
 
     @staticmethod
     def createRelationLangToUsers(tx, user, lang):
