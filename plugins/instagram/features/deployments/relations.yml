@@ -1,0 +1,22 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: instagram-relations-{{ uuid }}
+spec:
+  template:
+    metadata:
+      labels:
+        app: instagram-relations
+    spec:
+      containers:
+        - name: instagram-relations-{{ uuid }}
+          image: instagram-relations
+          env:
+            - name: MONGODB_URL
+              value: "mongodb://{{ mongodb_host }}:{{ mongodb_port }}"
+            - name: IG_USERID
+              value: "{{ userID }}"
+            - name: NEO4J_URL
+              value: "bolt://{{ neo4j_host }}:{{ neo4j_port }}"
+      restartPolicy: Never
