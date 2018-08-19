@@ -14,24 +14,28 @@ class TwitterAnalysis:
     def __init__(self, ownerOfTheSetOfTweet, filterOnTwit={}):
         self.owner = ownerOfTheSetOfTweet
         self.clientSource = self.setUpDb(
-            "MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "MONGO_TWITTER_COLLECTION")
+            "MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "src")
         self.clientDest = self.setUpDb(
-            "MONGO_HOST_DEST", "MONGO_PORT_DEST", "MONGO_TWITTER_DATABASE_DEST", "MONGO_TWITTER_COLLECTION_DEST", "twitter_analysis")
+            "MONGO_HOST_DEST", "MONGO_PORT_DEST", "MONGO_TWITTER_DATABASE_DEST", "dest")
         self.data = self.getDataFromDb(filterOnTwit)
 
-    def setUpDb(self, host, port, db, collection, dev="twitter_collection"):
+    def setUpDb(self, host, port, db, target):
         try:
             mongo_host = os.environ.get(host, "localhost")
             mongo_port = os.environ.get(port, 27017)
             mongo_database = os.environ.get(
                 db, "twitter_database")
-            mongo_collection = os.environ.get(
-                collection, dev)
+            mongo_collection = "twitter_collection-" + \
+                self.owner if target == "src" else "twitter_collection_dest-" + self.owner
             client = MongoClient(mongo_host, mongo_port)[
                 mongo_database][mongo_collection]
+            if target == "src" and client.count() == 0:
+                raise Exception(
+                    "There is no data in the source database: " + mongo_collection)
             return client
         except Exception as err:
-            print("Error when connecting to SOURCE database: " + err)
+            print("Error when connecting to SOURCE database: " + str(err))
+            exit(2)
 
     def getDataFromDb(self, filter):
         return self.clientSource.find(filter)
