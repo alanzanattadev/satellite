@@ -358,16 +358,19 @@ createPluginsDir(err => {
         });
       });
       kafkaConsumer.on("data", data => {
-        console.log(data)
         const value = JSON.parse(data.value.toString());
-        const msg = JSON.parse(value.message);
-        socket.emit("log", {
-          topic: data.topic,
-          time: msg.time,
-          stream: msg.stream,
-          message: msg.log.replace(/\n/g, ""),
-          source: value.source.match(/\/var\/log\/containers\/([^_]*)_/)[1]
-        });
+        if (data.topic === 'log') {
+          console.log(value)
+        } else {
+          const msg = JSON.parse(value.message);
+          socket.emit("log", {
+            topic: data.topic,
+            time: msg.time,
+            stream: msg.stream,
+            message: msg.log.replace(/\n/g, ""),
+            source: value.source.match(/\/var\/log\/containers\/([^_]*)_/)[1]
+          });
+        }
       });
 
       pluginList.emitter.on("new plugin", updateCLI);
