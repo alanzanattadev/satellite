@@ -35,7 +35,7 @@ run_cmd() {
             sh -c "$1"
             if [ $? != 0 ]; then
                 printf "${RED}Command: '$1' failed..${STD}\n"
-                printf "${RED}To resume deploy from this step, execute '$0 $ACTUAL_STEP'${STD}\n"
+                printf "${RED}To resume deploy from this step, execute '$0 $(($ACTUAL_STEP-1))'${STD}\n"
                 exit 1
             fi
         fi
@@ -75,24 +75,55 @@ run_cmd "juju config filebeat kube_logs=True"
 run_cmd "juju config kubernetes-master enable-dashboard-addons=False client_password=\"admin\""
 
 run_cmd "juju deploy $(dirname "$0")/charms/layers/neo4j"
+
+if [ $ACTUAL_STEP -gt $RESUME_STEP ]; then
+    printf "${GREEN}Deployment in progress, wait for the Docker Registry, see 'juju status'${STD}\n"
+    juju wait
+    while [ "$?" != "0" ]; do
+        juju wait
+    done
+fi
+
+REGISTRY_IP=$(juju status --format=yaml | sed -e '/docker-registry:/,/public-address/!d' | tr -d '\n' | sed -e 's/.*public-address: //')
+
+run_cmd "$(dirname "$0")/docker.sh $REGISTRY_IP"
+run_cmd "sudo docker build -t smaster $(dirname "$0")/master"
+run_cmd "sudo docker tag smaster $REGISTRY_IP:5000/smaster"
+run_cmd "sudo docker push $REGISTRY_IP:5000/smaster"
+run_cmd "echo \"echo \\\"{ \\\\\\\"insecure-registries\\\\\\\":[\\\\\\\"$REGISTRY_IP:5000\\\\\\\"] }\\\" | sudo tee /etc/docker/daemon.json\" >> $(dirname "$0")/charms/smaster/hooks/install"
+run_cmd "echo \"sudo service docker restart\" >> $(dirname "$0")/charms/smaster/hooks/install"
+run_cmd "echo \"docker pull $REGISTRY_IP:5000/smaster\" >> $(dirname "$0")/charms/smaster/hooks/install"
+run_cmd "echo \"docker run -i -t -d -p 80:8000 -v /home/ubuntu/.kube/config:/root/.kube/config $REGISTRY_IP:5000/smaster\" >> $(dirname "$0")/charms/smaster/hooks/start"
+
 run_cmd "juju deploy $(dirname "$0")/charms/smaster"
 run_cmd "juju add-relation neo4j smaster"
 run_cmd "juju add-relation mongodb smaster"
 run_cmd "juju add-relation kafka smaster"
-run_cmd "juju add-relation kubernetes-master smaster"
+run_cmd "juju add-relation kubernetes-master smaster:kubemaster"
 run_cmd "juju add-relation vault smaster"
+run_cmd "juju add-relation docker-registry smaster"
 run_cmd "juju expose smaster"
 
-printf "${GREEN}Deployment in progress, see 'juju status'${STD}\n"
-
-juju wait
-while [ "$?" != "0" ]; do
+if [ $ACTUAL_STEP -gt $RESUME_STEP ]; then
+    printf "${GREEN}Deployment in progress, wait for the Satellite Master${STD}\n"
     juju wait
+    while [ "$?" != "0" ]; do
+        juju wait
+    done
+fi
+
+# Push modules to docker registry
+for modulePath in $(dirname "$0")/modules/*; do
+    module=${modulePath##*/}
+    printf "${CYAN}Push $module docker image on the docker registry${STD}\n"
+    run_cmd "sudo docker build -t $module $(dirname "$0")/modules/$module"
+    run_cmd "sudo docker tag $module $REGISTRY_IP:5000/$module"
+    run_cmd "sudo docker push $REGISTRY_IP:5000/$module"
 done
 
 printf "${GREEN}Deployment succeed!${STD}\n"
 
-IP=$(juju status --format=yaml | sed -e '/smaster:/,/public-address/!d' | tr -d '\n' | sed -e 's/.*public-address: //')
+MASTER_IP=$(juju status --format=yaml | sed -e '/smaster:/,/public-address/!d' | tr -d '\n' | sed -e 's/.*public-address: //')
 
 printf "${CYAN}Install the Satellite CLI with 'sudo snap install satellite'${STD}\n"
-printf "${CYAN}To run the CLI: 'satellite.cli -s $IP'${STD}\n"
+printf "${CYAN}To run the CLI: 'satellite.cli -s $MASTER_IP'${STD}\n"
