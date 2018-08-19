@@ -49,7 +49,7 @@ app.post('/config/:app', (req, res) => {
   const { body, params } = req;
   const { app } = params;
   networkConfig[app] = body;
-  res.send('ok');
+  res.send('Configuration received');
   console.log(chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`));
 });
 
