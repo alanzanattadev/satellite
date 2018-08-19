@@ -23,7 +23,6 @@ def main():
     if args.graph and dataProfile:
         graph = GraphDB(dataProfile)
         graph.fetchNodesRelatedProfile()
-    print(dataProfile)
 
 
 if __name__ == "__main__":

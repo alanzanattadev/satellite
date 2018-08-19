@@ -22,13 +22,13 @@ class GraphDB:
     def createOneNodeRelation(self, name, msglog):
         with self.driver.session() as session:
             print(msglog)
-            return session.run("CREATE (a:Person {name: $name})", name=name.encode("ascii", "ignore").decode())
+            return session.run("CREATE (a:TwitterAccount {name: $name})", name=name.encode("ascii", "ignore").decode())
 
     def createRelationUser(self, user, data):
         with self.driver.session() as session:
             print("Log: Creation of User relation " +
                   user.encode("ascii", "ignore").decode())
-            return session.run("MATCH (a:Person) WHERE a.name = $nameA CREATE (b:Person {name: $nameB})-[r:RELATION {interactions: $interac, first_interaction: $firstI}]->(a)", nameA=self.owner, nameB=user.encode("ascii", "ignore").decode(), interac=data["count"], firstI=data["first_interac"].strftime("%d/%m/%Y"))
+            return session.run("MATCH (a:TwitterAccount) WHERE a.name = $nameA CREATE (b:TwitterAccount {name: $nameB})-[r:RELATION {interactions: $interac, first_interaction: $firstI}]->(a)", nameA=self.owner, nameB=user.encode("ascii", "ignore").decode(), interac=data["count"], firstI=data["first_interac"].strftime("%d/%m/%Y"))
 
     def createNodeLang(self, lang, data):
         with self.driver.session() as session:
@@ -40,7 +40,7 @@ class GraphDB:
             print("Log: Creation of RelationShip between Lang and User")
             for lang in langUsed:
                 session.run(
-                    "MATCH (a:Person),(b:Language) WHERE a.name = $user AND b.name = $lang CREATE (a)-[r:RELANG]->(b)", user=user.encode("ascii", "ignore").decode(), lang=lang.encode("ascii", "ignore").decode())
+                    "MATCH (a:TwitterAccount),(b:Language) WHERE a.name = $user AND b.name = $lang CREATE (a)-[r:RELANG]->(b)", user=user.encode("ascii", "ignore").decode(), lang=lang.encode("ascii", "ignore").decode())
 
     def fetchNodesRelatedProfile(self):
         for user, data in self.profile["relations"].items():
