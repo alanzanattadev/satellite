@@ -17,3 +17,4 @@ def predict_for_user(username, model, emotions_collection, audio_features_collec
     for result in results:
         print("%s: %f" % (result['type'], result['probability']))
     print("-------------------------")
+    return results
