@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: twitter-fetcher-get_all_twit_for_user-{{ username }}-{{ uuid }}
+spec:
+  template:
+    metadata:
+      labels:
+        app: twitter-fetcher
+    spec:
+      containers:
+        - name: twitter-fetcher-get_all_twit_for_user-{{ username }}-{{ uuid }}
+          image: prosset/twitter-fetcher
+          env:
+            - name: MONGO_HOST
+              value: "{{ mongodb_host }}"
+            - name: MONGO_PORT
+              value: "{{ mongodb_port }}"
+          args: ["python", "main.py", "{{ username }}", "-l", "{{ limit }}"]
+      restartPolicy: Never

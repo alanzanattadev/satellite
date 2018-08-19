@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: twitter-relations-analysis-set-{{ username }}-{{ uuid }}
+spec:
+  template:
+    metadata:
+      labels:
+        app: twitter-relation-analysis
+    spec:
+      containers:
+        - name: twitter-relations-analysis-set-{{ username }}-{{ uuid }}
+          image: prosset/twitter-analysis
+          env:
+            - name: MONGO_HOST
+              value: "{{ mongodb_host }}"
+            - name: MONGO_PORT
+              value: "{{ mongodb_port }}"
+            - name: MONGO_HOST_DEST
+              value: "{{ mongodb_host }}"
+            - name: MONGO_PORT_DEST
+              value: "{{ mongodb_port }}"
+            - name: NEO_URI
+              value: "bolt://{{ neo4j_host }}:{{ neo4j_port }}"
+            - name: MONGO_TWITTER_DATABASE_DEST
+              value: "twitter_analysis_database_destination"
+            - name: MONGO_TWITTER_COLLECTION_DEST
+              value: "twitter_analysis_collection_destination"
+          args: ["python", "cli.py", "{{ username }}", "-p", "-g"]
+      restartPolicy: Never
