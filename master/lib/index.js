@@ -346,7 +346,7 @@ createPluginsDir(err => {
       });
       kafkaConsumer.connect();
       kafkaConsumer.on("ready", () => {
-        kafkaConsumer.subscribe(["kube-logs"]);
+        kafkaConsumer.subscribe(["kube-logs", "log"]);
         kafkaConsumer.consume();
         console.log(chalk.cyan(`Connected to Kafka for socket id: ${socket.id}`));
         socket.emit("log", {
@@ -358,6 +358,7 @@ createPluginsDir(err => {
         });
       });
       kafkaConsumer.on("data", data => {
+        console.log(data)
         const value = JSON.parse(data.value.toString());
         const msg = JSON.parse(value.message);
         socket.emit("log", {
@@ -379,11 +380,20 @@ createPluginsDir(err => {
           )
         );
         runCommand(data.type, data.args)
-          .then(() => socket.emit("logs", { logs: chalk.green("Launched.") }))
-          .catch(err => {
+          .then(() => socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stdout",
+            message: "Command launched",
+            source: "Satellite",
+          })).catch(err => {
             console.log(chalk.red(err.toString()));
-            socket.emit("logs", {
-              logs: chalk.red(`Impossible to run command:\n${err.toString()}`)
+            return socket.emit("log", {
+              topic: "Master",
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to run command: ${err.toString()}`,
+              source: "Satellite",
             });
           });
       });
