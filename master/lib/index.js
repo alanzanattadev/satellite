@@ -360,7 +360,13 @@ createPluginsDir(err => {
       kafkaConsumer.on("data", data => {
         const value = JSON.parse(data.value.toString());
         if (data.topic === 'log') {
-          console.log(value)
+          socket.emit("log", {
+            topic: data.topic,
+            time: value['@timestamp'],
+            stream: 'stdout',
+            message: value.message,
+            source: value.source.match(/\/var\/log\/juju\/(.*)\.log/)[1]
+          });
         } else {
           const msg = JSON.parse(value.message);
           socket.emit("log", {
