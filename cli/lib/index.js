@@ -131,21 +131,8 @@ vorpal
 vorpal
   .command("kubectl [args...]", "Launch a kubectl command")
   .action((args, callback) => {
-    const qs = { args: args || [] };
-    request.get({ url: `${new URL("/kubectl", serverUri)}`, qs }, (err, http, body) => {
-      if (err || http.statusCode >= 300) {
-        vorpal.log(chalk.red("Kubectl request failed:" + err));
-        return callback();
-      }
-      const json = JSON.parse(body);
-      if (json.stderr && json.stderr.length > 0) {
-        vorpal.log(chalk.red(json.stderr));
-      }
-      if (json.stdout && json.stdout.length > 0) {
-        vorpal.log(chalk.green(json.stdout));
-      }
-      return callback();
-    });
+    socket.emit("kubectl", { args: args || [] });
+    callback();
   });
 
 socket.on("cli-config", function({ commands = [] }, callback) {

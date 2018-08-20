@@ -234,14 +234,6 @@ app.get("/visu", (req, res) => {
   });
 });
 
-app.get("/kubectl", (req, res) => {
-  const args = (req.query && req.query.args && req.query.args.args
-      ? req.query.args.args : []);
-  return exec(`/snap/bin/kubectl ${args.join(' ')}`, (error, stdout, stderr) => {
-    res.send({ stdout, stderr });
-  });
-});
-
 function createSocketCLIUpdater(socket) {
   return function updater() {
     socket.emit("cli-config", {
@@ -433,6 +425,39 @@ createPluginsDir(err => {
             });
           });
       });
+
+      socket.on("kubectl", ({ args }) => {
+        const kubectl = spawn(KUBECTL_BIN, args);
+        kubectl.stdout.on("data", data => socket.emit("log", {
+          topic: "Master",
+          time: new Date(),
+          stream: "stdout",
+          message: data,
+          source: "Kubectl",
+        }));
+        kubectl.stderr.on("data", data => socket.emit("log", {
+          topic: "Master",
+          time: new Date(),
+          stream: "stderr",
+          message: data,
+          source: "Kubectl",
+        }));
+        kubectl.on("error", error => socket.emit("log", {
+          topic: "Master",
+          time: new Date(),
+          stream: "stdout",
+          message: `Kubectl error: ${error}`,
+          source: "Kubectl",
+        }));
+        return kubectl.on("exit", code => socket.emit("log", {
+          topic: "Master",
+          time: new Date(),
+          stream: "stdout",
+          message: `Kubectl exit with code: ${code}`,
+          source: "Kubectl",
+        }));
+      });
+
       socket.on("disconnect", function() {
         pluginList.emitter.removeListener("new plugin", updateCLI);
         console.log(
