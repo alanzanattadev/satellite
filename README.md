@@ -60,6 +60,20 @@ deployment file. The deployment file will be compiled with Swig (which respects 
 When you define an argument or an option in the configuration attribut of the CLI config file,
 the argument will be sent to the templating engine.
 
+There is templating variables for an uuid generated value and network configurations:
+
+- `uuid`
+- `mongodb_host`
+- `mongodb_port`
+- `neo4j_host`
+- `neo4j_post`
+- `kafka_host`
+- `kafka_port`
+- `registry_host`
+- `registry_port`
+
+An example of the deployment template file:
+
 ```yaml
 ---
 apiVersion: batch/v1
@@ -76,6 +90,9 @@ spec:
         - name: spotify-habits-get-all-for-user-{{ username }}
           image: spotify-habits
           args: ["./get_all_for_user.sh", "{{ username }}"]
+          env:
+            - name: NEO4J_URL
+              value: "bolt://{{ neo4j_host }}:{{ neo4j_port }}"
       restartPolicy: Never
 ```
 
