@@ -23,7 +23,7 @@ const chalk = require("chalk");
 const { exec, spawn } = require("child_process");
 const yaml = require("js-yaml");
 const EventEmitter = require("events");
-const neo4j = require('neo4j-driver').v1;
+const neo4j = require("neo4j-driver").v1;
 const Kafka = require("node-rdkafka");
 const template = require("swig");
 const guid = require("uuid/v4");
@@ -39,17 +39,21 @@ const networkConfig = {
   mongodb: { host: "0.0.0.0" },
   vault: { host: "0.0.0.0" },
   kube: { host: "0.0.0.0" },
+  registry: { host: "0.0.0.0" }
 };
+
 const defaultPorts = {
   kafka: "9092",
   neo4j: "7687",
   mongodb: "27017",
-}
-app.post('/config/:app', (req, res) => {
+  registry: "5000"
+};
+
+app.post("/config/:app", (req, res) => {
   const { body, params } = req;
   const { app } = params;
   networkConfig[app] = body;
-  res.send('Configuration received');
+  res.send("Configuration received");
   console.log(chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`));
 });
 
@@ -217,10 +221,13 @@ app.post("/plugins/load", upload.single("plugin"), (req, res) => {
   }
 });
 
-app.get('/visu', (req, res) => {
-  const driver = neo4j.driver(`bolt://${networkConfig.neo4j.host}:${defaultPorts.neo4j}`, neo4j.auth.basic('neo4j', 'neo4j'));
+app.get("/visu", (req, res) => {
+  const driver = neo4j.driver(
+    `bolt://${networkConfig.neo4j.host}:${defaultPorts.neo4j}`,
+    neo4j.auth.basic("neo4j", "neo4j")
+  );
   const session = driver.session();
-  session.run('MATCH (a)-[r]-(b) RETURN *').then(result => {
+  session.run("MATCH (a)-[r]-(b) RETURN *").then(result => {
     session.close();
     driver.close();
     res.send(result.records);
@@ -257,7 +264,9 @@ function compileTemplate(filePath, args) {
       neo4j_port: defaultPorts.neo4j,
       kafka_host: networkConfig.kafka.host,
       kafka_port: defaultPorts.kafka,
-      uuid: guid(),
+      registry_host: networkConfig.registry.host,
+      registry_port: defaultPorts.registry,
+      uuid: guid()
     });
     console.log(renderedContent);
     const renderedFileName = `compiled-template-${guid()}`;
@@ -331,11 +340,19 @@ createPluginsDir(err => {
       updateCLI();
 
       const kafkaConsumer = new Kafka.KafkaConsumer({
-        'group.id': socket.id,
-        'metadata.broker.list': `${networkConfig.kafka.host}:${defaultPorts.kafka}`,
+        "group.id": socket.id,
+        "metadata.broker.list": `${networkConfig.kafka.host}:${
+          defaultPorts.kafka
+        }`
       });
       kafkaConsumer.on("event.error", err => {
-        console.log(chalk.red(`Error in Kafka connection for socket id: ${socket.id} (${err.stack})`));
+        console.log(
+          chalk.red(
+            `Error in Kafka connection for socket id: ${socket.id} (${
+              err.stack
+            })`
+          )
+        );
         socket.emit("log", {
           topic: "Kafka",
           time: new Date(),
@@ -348,7 +365,9 @@ createPluginsDir(err => {
       kafkaConsumer.on("ready", () => {
         kafkaConsumer.subscribe(["kube-logs", "log"]);
         kafkaConsumer.consume();
-        console.log(chalk.cyan(`Connected to Kafka for socket id: ${socket.id}`));
+        console.log(
+          chalk.cyan(`Connected to Kafka for socket id: ${socket.id}`)
+        );
         socket.emit("log", {
           topic: "Kafka",
           time: new Date(),
