@@ -234,6 +234,14 @@ app.get("/visu", (req, res) => {
   });
 });
 
+app.get("/kubectl", (req, res) => {
+  const args = (req.query && req.query.args && req.query.args.args
+      ? req.query.args.args : []);
+  return exec(`/snap/bin/kubectl ${args.join(' ')}`, (error, stdout, stderr) => {
+    res.send({ stdout, stderr });
+  });
+});
+
 function createSocketCLIUpdater(socket) {
   return function updater() {
     socket.emit("cli-config", {
