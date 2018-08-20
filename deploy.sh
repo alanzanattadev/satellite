@@ -65,7 +65,7 @@ run_cmd "juju deploy cs:zookeeper-42"
 run_cmd "juju deploy cs:filebeat-18"
 run_cmd "juju deploy cs:mongodb-48"
 run_cmd "juju deploy cs:~jamesbeedy/vault-13"
-run_cmd "juju deploy cs:~jacekn/docker-registry-0"
+run_cmd "juju deploy $(dirname "$0")/charms/docker-registry"
 
 run_cmd "juju add-relation kafka zookeeper"
 run_cmd "juju add-relation kubernetes-worker docker-registry"
