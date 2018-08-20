@@ -34,12 +34,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 const networkConfig = {
-  kafka: { host: "0.0.0.0" },
-  neo4j: { host: "0.0.0.0" },
-  mongodb: { host: "0.0.0.0" },
-  vault: { host: "0.0.0.0" },
-  kube: { host: "0.0.0.0" },
-  registry: { host: "0.0.0.0" }
+  kafka: { host: process.env.KAFKA_HOST || "0.0.0.0" },
+  neo4j: { host: process.env.NEO4J_HOST || "0.0.0.0" },
+  mongodb: { host: process.env.MONGO_HOST || "0.0.0.0" },
+  vault: { host: process.env.VAULT_HOSt || "0.0.0.0" },
+  kube: { host: process.env.KUBERNETES_HOST || "0.0.0.0" },
+  registry: { host: process.env.REGISTRY_HOST || "0.0.0.0" }
 };
 
 const defaultPorts = {
