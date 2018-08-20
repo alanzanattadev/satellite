@@ -50,6 +50,7 @@ if [[ "$ACTUAL_SUDO" == "" ]]; then
     run_cmd "sudo sh -c \"echo \\\"$SUDO_LINE\\\" >> /etc/sudoers\""
 fi
 
+run_cmd "sudo apt update"
 run_cmd "sudo snap install conjure-up --classic"
 run_cmd "sudo snap install lxd"
 run_cmd "/snap/bin/lxd init --preseed < $(dirname "$0")/config/lxd-init-preseed.yaml" "/var/snap/lxd/common/lxd/unix.socket"
@@ -65,7 +66,7 @@ run_cmd "juju deploy cs:zookeeper-42"
 run_cmd "juju deploy cs:filebeat-18"
 run_cmd "juju deploy cs:mongodb-48"
 run_cmd "juju deploy cs:~jamesbeedy/vault-13"
-run_cmd "juju deploy cs:~jacekn/docker-registry-0"
+run_cmd "juju deploy $(dirname "$0")/charms/docker-registry"
 
 run_cmd "juju add-relation kafka zookeeper"
 run_cmd "juju add-relation kubernetes-worker docker-registry"
