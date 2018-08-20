@@ -54,7 +54,9 @@ app.post("/config/:app", (req, res) => {
   const { app } = params;
   networkConfig[app] = body;
   res.send("Configuration received");
-  console.log(chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`));
+  console.log(
+    chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`)
+  );
 });
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
@@ -378,15 +380,15 @@ createPluginsDir(err => {
       });
       kafkaConsumer.on("data", data => {
         const value = JSON.parse(data.value.toString());
-        if (data.topic === 'log' && value.source.includes('/var/log/juju/')) {
+        if (data.topic === "log" && value.source.includes("/var/log/juju/")) {
           socket.emit("log", {
             topic: data.topic,
-            time: value['@timestamp'],
-            stream: 'stdout',
+            time: value["@timestamp"],
+            stream: "stdout",
             message: value.message,
-            source: value.source.replace('/var/log/juju/', '')
+            source: value.source.replace("/var/log/juju/", "")
           });
-        } else if (data.topic === 'kube-logs') {
+        } else if (data.topic === "kube-logs") {
           const msg = JSON.parse(value.message);
           socket.emit("log", {
             topic: data.topic,
@@ -408,20 +410,27 @@ createPluginsDir(err => {
           )
         );
         runCommand(data.type, data.args)
-          .then(() => socket.emit("log", {
-            topic: "Master",
-            time: new Date(),
-            stream: "stdout",
-            message: "Command launched",
-            source: "Satellite",
-          })).catch(err => {
+          .then(() =>
+            socket.emit("log", {
+              topic: "Master",
+              time: new Date(),
+              stream: "stdout",
+              message: "Command launched",
+              source: "Satellite"
+            })
+          )
+          .catch(err => {
             console.log(chalk.red(err.toString()));
             return socket.emit("log", {
               topic: "Master",
               time: new Date(),
               stream: "stderr",
               message: `Impossible to the run command: ${err.toString()}`,
-              source: "Satellite",
+              source: "Satellite"
+            });
+          });
+      });
+
       const driver = neo4j.driver(
         `bolt://${networkConfig.neo4j.host}:${defaultPorts.neo4j.port}`,
         neo4j.auth.basic("neo4j", "test")
