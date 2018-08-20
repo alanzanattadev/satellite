@@ -422,9 +422,122 @@ createPluginsDir(err => {
               stream: "stderr",
               message: `Impossible to the run command: ${err.toString()}`,
               source: "Satellite",
+      const driver = neo4j.driver(
+        `bolt://${networkConfig.neo4j.host}:${defaultPorts.neo4j.port}`,
+        neo4j.auth.basic("neo4j", "test")
+      );
+      socket.on("meta-profile-create", ({ name }) => {
+        const session = driver.session();
+        session
+          .run(
+            "MERGE (mp:MetaProfil { name: $name }) ON CREATE SET mp.name = $name RETURN mp",
+            { name }
+          )
+          .then(() => {
+            socket.emit("log", {
+              time: new Date(),
+              message: "Meta profile successfully created",
+              source: "Satellite"
             });
+            session.close();
+          })
+          .catch(err => {
+            socket.emit("log", {
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to create meta profile: ${err.toString()}`,
+              source: "Satellite"
+            });
+            session.close();
           });
       });
+
+      socket.on("meta-profile-search", ({ name }) => {
+        const session = driver.session();
+        session
+          .run(
+            `MATCH (mp:MetaProfil)
+              WHERE mp.name CONTAINS $name
+              RETURN mp.name`,
+            { name }
+          )
+          .then(result => {
+            socket.emit("log", {
+              time: new Date(),
+              message: `Results:
+                ${result.records
+                  .map(node => `- ${node.get("mp.name")}`)
+                  .join("\n")}
+              `,
+              source: "Satellite"
+            });
+            session.close();
+          })
+          .catch(err => {
+            socket.emit("log", {
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to search meta profile: ${err.toString()}`,
+              source: "Satellite"
+            });
+            session.close();
+          });
+      });
+
+      socket.on("meta-profile-link", ({ name, accountType, targetString }) => {
+        const session = driver.session();
+        session
+          .run(
+            `MATCH (mp:MetaProfil { name: $name })
+              MATCH (target) WHERE $accountType IN labels(target) AND ANY (property in keys(target) WHERE target[property] = $targetString)
+              MERGE (mp)-[r:HAS_ACCOUNT]->(target)
+              RETURN mp`,
+            { name, accountType, targetString }
+          )
+          .then(() => {
+            socket.emit("log", {
+              time: new Date(),
+              message: "Meta profile successfully linked",
+              source: "Satellite"
+            });
+            session.close();
+          })
+          .catch(err => {
+            socket.emit("log", {
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to link meta profile: ${err.toString()}`,
+              source: "Satellite"
+            });
+            session.close();
+          });
+      });
+
+      socket.on("meta-profile-remove", ({ name }) => {
+        const session = driver.session();
+        session
+          .run("MATCH (mp:MetaProfil { name: $name }) DETACH DELETE mp", {
+            name
+          })
+          .then(() => {
+            socket.emit("log", {
+              time: new Date(),
+              message: "Meta profile successfully removed",
+              source: "Satellite"
+            });
+            session.close();
+          })
+          .catch(err => {
+            socket.emit("log", {
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to remove meta profile: ${err.toString()}`,
+              source: "Satellite"
+            });
+            session.close();
+          });
+      });
+
       socket.on("disconnect", function() {
         pluginList.emitter.removeListener("new plugin", updateCLI);
         console.log(
@@ -435,6 +548,7 @@ createPluginsDir(err => {
         io.emit("user disconnected");
 
         kafkaConsumer.disconnect();
+        driver.close();
       });
     });
   }
