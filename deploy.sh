@@ -58,6 +58,7 @@ run_cmd "sudo apt install python-pip -y"
 run_cmd "pip install juju-wait"
 
 run_cmd "conjure-up kubernetes-core localhost"
+run_cmd "juju model-config logging-config=\"<root>=WARNING;unit=WARNING\""
 
 run_cmd "juju deploy cs:kafka-40"
 run_cmd "juju deploy cs:zookeeper-42"
@@ -68,11 +69,11 @@ run_cmd "juju deploy cs:~jacekn/docker-registry-0"
 
 run_cmd "juju add-relation kafka zookeeper"
 run_cmd "juju add-relation kubernetes-worker docker-registry"
-run_cmd "juju add-relation kubernetes-master filebeat"
 run_cmd "juju add-relation kubernetes-worker filebeat"
+run_cmd "juju add-relation kubernetes-master filebeat"
 run_cmd "juju add-relation kafka filebeat"
 run_cmd "juju config filebeat kube_logs=True"
-run_cmd "juju config kubernetes-master enable-dashboard-addons=False client_password=\"admin\""
+run_cmd "juju config kubernetes-master enable-dashboard-addons=False enable-kube-dns=False enable-metrics=False client_password=\"admin\""
 
 run_cmd "juju deploy $(dirname "$0")/charms/layers/neo4j"
 
