@@ -50,6 +50,7 @@ if [[ "$ACTUAL_SUDO" == "" ]]; then
     run_cmd "sudo sh -c \"echo \\\"$SUDO_LINE\\\" >> /etc/sudoers\""
 fi
 
+run_cmd "sudo apt update"
 run_cmd "sudo snap install conjure-up --classic"
 run_cmd "sudo snap install lxd"
 run_cmd "/snap/bin/lxd init --preseed < $(dirname "$0")/config/lxd-init-preseed.yaml" "/var/snap/lxd/common/lxd/unix.socket"
