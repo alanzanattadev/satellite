@@ -53,10 +53,8 @@ app.post("/config/:app", (req, res) => {
   const { body, params } = req;
   const { app } = params;
   networkConfig[app] = body;
-  res.send("ok");
-  console.log(
-    chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`)
-  );
+  res.send("Configuration received");
+  console.log(chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`));
 });
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
@@ -365,7 +363,7 @@ createPluginsDir(err => {
       });
       kafkaConsumer.connect();
       kafkaConsumer.on("ready", () => {
-        kafkaConsumer.subscribe(["kube-logs"]);
+        kafkaConsumer.subscribe(["kube-logs", "log"]);
         kafkaConsumer.consume();
         console.log(
           chalk.cyan(`Connected to Kafka for socket id: ${socket.id}`)
@@ -380,14 +378,24 @@ createPluginsDir(err => {
       });
       kafkaConsumer.on("data", data => {
         const value = JSON.parse(data.value.toString());
-        const msg = JSON.parse(value.message);
-        socket.emit("log", {
-          topic: data.topic,
-          time: msg.time,
-          stream: msg.stream,
-          message: msg.log.replace(/\n/g, ""),
-          source: value.source.match(/\/var\/log\/containers\/([^_]*)_/)[1]
-        });
+        if (data.topic === 'log' && value.source.includes('/var/log/juju/')) {
+          socket.emit("log", {
+            topic: data.topic,
+            time: value['@timestamp'],
+            stream: 'stdout',
+            message: value.message,
+            source: value.source.replace('/var/log/juju/', '')
+          });
+        } else if (data.topic === 'kube-logs') {
+          const msg = JSON.parse(value.message);
+          socket.emit("log", {
+            topic: data.topic,
+            time: msg.time,
+            stream: msg.stream,
+            message: msg.log.replace(/\n/g, ""),
+            source: value.source.match(/\/var\/log\/containers\/([^_]*)_/)[1]
+          });
+        }
       });
 
       pluginList.emitter.on("new plugin", updateCLI);
@@ -400,11 +408,20 @@ createPluginsDir(err => {
           )
         );
         runCommand(data.type, data.args)
-          .then(() => socket.emit("logs", { logs: chalk.green("Launched.") }))
-          .catch(err => {
+          .then(() => socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stdout",
+            message: "Command launched",
+            source: "Satellite",
+          })).catch(err => {
             console.log(chalk.red(err.toString()));
-            socket.emit("logs", {
-              logs: chalk.red(`Impossible to run command:\n${err.toString()}`)
+            return socket.emit("log", {
+              topic: "Master",
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to the run command: ${err.toString()}`,
+              source: "Satellite",
             });
           });
       });
