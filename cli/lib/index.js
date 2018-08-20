@@ -86,7 +86,7 @@ vorpal
   });
 
 vorpal
-  .command("visu", "Prepare visualization")
+  .command("visualization", "Prepare visualization")
   .action((args, callback) => {
     request.get({ url: `${new URL("/visu", serverUri)}` }, (err, http, body) => {
         if (err || http.statusCode >= 300) {
@@ -126,6 +126,13 @@ vorpal
         return callback();
       }
     );
+  });
+
+vorpal
+  .command("kubectl [args...]", "Launch a kubectl command")
+  .action((args, callback) => {
+    socket.emit("kubectl", { args: args || [] });
+    callback();
   });
 
 socket.on("cli-config", function({ commands = [] }, callback) {
