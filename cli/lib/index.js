@@ -91,6 +91,7 @@ vorpal.command("visualization", "Prepare visualization").action((args, callback)
       vorpal.log(chalk.red("Visualization request failed:" + err));
       return callback();
     }
+    console.log(body)
     const json = JSON.parse(body);
     const nodesWithDup = json.reduce((acc, elem) => {
       const node0 = elem._fields[0];
