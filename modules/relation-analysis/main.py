@@ -198,6 +198,6 @@ class TwitterAnalysis:
         df = self.createDfBasedOnTime(timeSet)
         profile["analysisDataFrame"] = df
         self.setUpDb("MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "twitter_collection_res-" +
-                     self.owner).insert({"result": json.dumps(profile, default=fromInt64ToInt)})
+                     self.owner).replace_one({"_id": 1}, {"result": json.dumps(profile, default=fromInt64ToInt)}, upsert=True)
         print("INFO: Inserted total result of your profile, at: twitter_collection_res-"+self.owner)
         return profile
