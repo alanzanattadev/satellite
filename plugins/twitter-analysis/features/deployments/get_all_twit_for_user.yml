@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: twitter-fetcher-get_all_twit_for_user-{{ username }}-{{ uuid }}
+  name: twitter-fetcher-get-all-twit-for-user-{{ username }}-{{ uuid }}
 spec:
   template:
     metadata:
@@ -9,7 +9,7 @@ spec:
         app: twitter-fetcher
     spec:
       containers:
-        - name: twitter-fetcher-get_all_twit_for_user-{{ username }}-{{ uuid }}
+        - name: twitter-fetcher-get-all-twit-for-user-{{ username }}-{{ uuid }}
           image: prosset/twitter-fetcher
           env:
             - name: MONGO_HOST
