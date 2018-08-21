@@ -548,7 +548,7 @@ createPluginsDir(err => {
       });
 
       socket.on("kubectl", ({ args }) => {
-        const kubectl = spawn(KUBECTL_BIN, args);
+        const kubectl = spawn(KUBECTL_BIN, args.args);
         kubectl.stdout.on("data", data =>
           socket.emit("log", {
             topic: "Master",
