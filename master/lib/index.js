@@ -545,38 +545,46 @@ createPluginsDir(err => {
             });
             session.close();
           });
-        
-        
+      });
+
       socket.on("kubectl", ({ args }) => {
         const kubectl = spawn(KUBECTL_BIN, args);
-        kubectl.stdout.on("data", data => socket.emit("log", {
-          topic: "Master",
-          time: new Date(),
-          stream: "stdout",
-          message: data,
-          source: "Kubectl",
-        }));
-        kubectl.stderr.on("data", data => socket.emit("log", {
-          topic: "Master",
-          time: new Date(),
-          stream: "stderr",
-          message: data,
-          source: "Kubectl",
-        }));
-        kubectl.on("error", error => socket.emit("log", {
-          topic: "Master",
-          time: new Date(),
-          stream: "stdout",
-          message: `Kubectl error: ${error}`,
-          source: "Kubectl",
-        }));
-        return kubectl.on("exit", code => socket.emit("log", {
-          topic: "Master",
-          time: new Date(),
-          stream: "stdout",
-          message: `Kubectl exit with code: ${code}`,
-          source: "Kubectl",
-        }));
+        kubectl.stdout.on("data", data =>
+          socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stdout",
+            message: data,
+            source: "Kubectl"
+          })
+        );
+        kubectl.stderr.on("data", data =>
+          socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stderr",
+            message: data,
+            source: "Kubectl"
+          })
+        );
+        kubectl.on("error", error =>
+          socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stdout",
+            message: `Kubectl error: ${error}`,
+            source: "Kubectl"
+          })
+        );
+        return kubectl.on("exit", code =>
+          socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stdout",
+            message: `Kubectl exit with code: ${code}`,
+            source: "Kubectl"
+          })
+        );
       });
 
       socket.on("disconnect", function() {
