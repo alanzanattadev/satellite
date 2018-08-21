@@ -10,7 +10,7 @@ class GraphDB:
     def __init__(self, profileAfterProcess):
         self.uri = os.environ.get("NEO_URI", "bolt://localhost:7687")
         self.user = os.environ.get("NEO_USER", "neo4j")
-        self.password = os.environ.get("NEO_PASS", "polo")
+        self.password = os.environ.get("NEO_PASS", "neo4j")
         self.driver = GraphDatabase.driver(
             self.uri, auth=(self.user, self.password))
         self.profile = profileAfterProcess
