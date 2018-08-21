@@ -8,8 +8,8 @@ import pandas as pd
 import os
 import re
 import collections
-import numpy
 import json
+from utils import fromInt64ToInt
 
 
 class TwitterAnalysis:
@@ -18,12 +18,13 @@ class TwitterAnalysis:
         self.clientSource = self.setUpDb(
             "MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "twitter_collection-"+ownerOfTheSetOfTweet)
         self.clientDest = self.setUpDb(
-            "MONGO_HOST_DEST", "MONGO_PORT_DEST", "MONGO_TWITTER_DATABASE_DEST", "twitter_collection_dest-"+ownerOfTheSetOfTweet)
+            "MONGO_HOST_DEST" or "MONGO_HOST", "MONGO_PORT_DEST", "MONGO_TWITTER_DATABASE_DEST", "twitter_collection_dest-"+ownerOfTheSetOfTweet)
         self.data = self.getDataFromDb(filterOnTwit)
 
     def setUpDb(self, host, port, db, collection):
         try:
-            mongo_host = os.environ.get(host, "localhost")
+            mongo_host = os.environ.get(
+                host, os.environ.get("MONGO_HOST", "localhost"))
             mongo_port = os.environ.get(port, 27017)
             mongo_database = os.environ.get(
                 db, "twitter_database")
@@ -197,11 +198,6 @@ class TwitterAnalysis:
         df = self.createDfBasedOnTime(timeSet)
         profile["analysisDataFrame"] = df
         self.setUpDb("MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "twitter_collection_res-" +
-                     self.owner).insert({"result": json.dumps(profile, default=self.default)})
+                     self.owner).insert({"result": json.dumps(profile, default=fromInt64ToInt)})
         print("INFO: Inserted total result of your profile, at: twitter_collection_res-"+self.owner)
         return profile
-
-    def default(self, o):
-        if isinstance(o, numpy.int64):
-            return int(o)
-        raise TypeError
