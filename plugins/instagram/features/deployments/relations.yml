@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
         - name: instagram-relations-{{ uuid }}
-          image: instagram-relations
+          image: "{{ registry_host }}:{{ registry_port }}/instagram-relations"
           env:
             - name: MONGODB_URL
               value: "mongodb://{{ mongodb_host }}:{{ mongodb_port }}"

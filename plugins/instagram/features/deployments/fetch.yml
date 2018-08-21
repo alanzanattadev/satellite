@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
         - name: instagram-fetcher-{{ uuid }}
-          image: instagram-fetcher
+          image: "{{ registry_host }}:{{ registry_port }}/instagram-fetcher"
           env:
             - name: MONGODB_URL
               value: "mongodb://{{ mongodb_host }}:{{ mongodb_port }}"
