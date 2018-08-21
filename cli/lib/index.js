@@ -94,8 +94,8 @@ vorpal.command("visualization", "Prepare visualization").action((args, callback)
     console.log(body)
     const json = JSON.parse(body);
     const nodesWithDup = json.reduce((acc, elem) => {
-      const node0 = elem._fields[0];
-      const node1 = elem._fields[2];
+      const node0 = elem._fields[elem._fieldLookup.a];
+      const node1 = elem._fields[elem._fieldLookup.b];
       return acc.concat(
         [node0, node1].map(node => ({
           id: node.identity.low,
@@ -109,7 +109,7 @@ vorpal.command("visualization", "Prepare visualization").action((args, callback)
     );
 
     const relationships = json.map(elem => {
-      const relation = elem._fields[1];
+      const relation = elem._fields[elem._fieldLookup.r];
       return {
         id: relation.identity.low,
         type: relation.type,
