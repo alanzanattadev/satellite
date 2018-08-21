@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+docker run -i -d -p 5000:5000 --name docker-registry-satellite registry:latest
+status-set active "Docker registry for Satellite is running at port 5000"

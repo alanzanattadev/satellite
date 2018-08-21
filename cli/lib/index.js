@@ -85,7 +85,7 @@ vorpal
     );
   });
 
-vorpal.command("visu", "Prepare visualization").action((args, callback) => {
+vorpal.command("visualization", "Prepare visualization").action((args, callback) => {
   request.get({ url: `${new URL("/visu", serverUri)}` }, (err, http, body) => {
     if (err || http.statusCode >= 300) {
       vorpal.log(chalk.red("Visualization request failed:" + err));
@@ -158,6 +158,13 @@ vorpal
   .command("search meta profile <name>", "Search meta profile")
   .action((args, callback) => {
     socket.emit("meta-profile-search", args);
+    callback();
+  });
+
+vorpal
+  .command("kubectl [args...]", "Launch a kubectl command")
+  .action((args, callback) => {
+    socket.emit("kubectl", { args: args || [] });
     callback();
   });
 
