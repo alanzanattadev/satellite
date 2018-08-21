@@ -10,7 +10,7 @@ spec:
     spec:
       containers:
         - name: twitter-relations-analysis-set-{{ username }}-{{ uuid }}
-          image: prosset/twitter-analysis
+          image: "{{ registry_host }}:{{ registry_port }}/relation-analysis"
           env:
             - name: MONGO_HOST
               value: "{{ mongodb_host }}"

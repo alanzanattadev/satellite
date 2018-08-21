@@ -10,7 +10,7 @@ spec:
     spec:
       containers:
         - name: twitter-fetcher-get-all-twit-for-user-{{ username }}-{{ uuid }}
-          image: prosset/twitter-fetcher
+          image: "{{ registry_host }}:{{ registry_port }}/twit-fetcher"
           env:
             - name: MONGO_HOST
               value: "{{ mongodb_host }}"

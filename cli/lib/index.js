@@ -17,10 +17,10 @@ const yargs = require("yargs")
 const { exec } = require("child_process");
 const request = require("request");
 const { URL } = require("url");
-const express = require("express")
+const express = require("express");
 const app = express();
-app.set('view engine', 'ejs');
-app.use(express.static('public'))
+app.set("view engine", "ejs");
+app.use(express.static("public"));
 const server = require("http").Server(app);
 
 const chalk = vorpal.chalk;
@@ -85,47 +85,80 @@ vorpal
     );
   });
 
-vorpal
-  .command("visualization", "Prepare visualization")
-  .action((args, callback) => {
-    request.get({ url: `${new URL("/visu", serverUri)}` }, (err, http, body) => {
-        if (err || http.statusCode >= 300) {
-          vorpal.log(chalk.red("Visualization request failed:" + err));
-          return callback();
-        }
-        const json = JSON.parse(body);
-
-        const nodesWithDup = json.reduce((acc, elem) => {
-          const node0 = elem._fields[0];
-          const node1 = elem._fields[2];
-          return acc.concat([node0, node1].map((node) => ({
-            id: node.identity.low,
-            labels: node.labels,
-            properties: node.properties,
-          })));
-        }, []);
-        const nodes = nodesWithDup.filter((item, pos) => (nodesWithDup.indexOf(item) == pos));
-
-        const relationships = json.map((elem) => {
-          const relation = elem._fields[1];
-          return {
-            id: relation.identity.low,
-            type: relation.type,
-            startNode: relation.start.low,
-            endNode: relation.end.low,
-            properties: relation.properties,
-          };
-        });
-
-        app.get('/', (req, res) => {
-          res.render('index', {
-            data: { results: [{ data: [{ graph: { nodes, relationships } }] }] },
-          });
-        });
-        vorpal.log(chalk.green("Visualization available at 'http://localhost:9123/' !"));
-        return callback();
-      }
+vorpal.command("visualization", "Prepare visualization").action((args, callback) => {
+  request.get({ url: `${new URL("/visu", serverUri)}` }, (err, http, body) => {
+    if (err || http.statusCode >= 300) {
+      vorpal.log(chalk.red("Visualization request failed:" + err));
+      return callback();
+    }
+    const json = JSON.parse(body);
+    const nodesWithDup = json.reduce((acc, elem) => {
+      const node0 = elem._fields[0];
+      const node1 = elem._fields[2];
+      return acc.concat(
+        [node0, node1].map(node => ({
+          id: node.identity.low,
+          labels: node.labels,
+          properties: node.properties
+        }))
+      );
+    }, []);
+    const nodes = nodesWithDup.filter(
+      (item, pos) => nodesWithDup.indexOf(item) == pos
     );
+
+    const relationships = json.map(elem => {
+      const relation = elem._fields[1];
+      return {
+        id: relation.identity.low,
+        type: relation.type,
+        startNode: relation.start.low,
+        endNode: relation.end.low,
+        properties: relation.properties
+      };
+    });
+
+    app.get("/", (req, res) => {
+      res.render("index", {
+        data: { results: [{ data: [{ graph: { nodes, relationships } }] }] }
+      });
+    });
+    vorpal.log(
+      chalk.green("Visualization available at 'http://localhost:9123/' !")
+    );
+    return callback();
+  });
+});
+
+vorpal
+  .command("create meta profile <name>", "Create meta profile")
+  .action((args, callback) => {
+    socket.emit("meta-profile-create", args);
+    callback();
+  });
+
+vorpal
+  .command(
+    "link meta profile <name> to <accountType> <targetString>",
+    "Link meta profile to account"
+  )
+  .action((args, callback) => {
+    socket.emit("meta-profile-link", args);
+    callback();
+  });
+
+vorpal
+  .command("remove meta profile <name>", "Remove meta profile")
+  .action((args, callback) => {
+    socket.emit("meta-profile-remove", args);
+    callback();
+  });
+
+vorpal
+  .command("search meta profile <name>", "Search meta profile")
+  .action((args, callback) => {
+    socket.emit("meta-profile-search", args);
+    callback();
   });
 
 vorpal
@@ -158,10 +191,10 @@ socket.on("cli-config", function({ commands = [] }, callback) {
 
 socket.on("connect", function() {
   vorpal.log(chalk.green(`Connected to ${serverUri}`));
-  server.listen(9123)
+  server.listen(9123);
 });
 
-socket.on("log", (log) => {
+socket.on("log", log => {
   vorpal.log(chalk.gray(`[${log.source}] ${log.message}`));
 });
 

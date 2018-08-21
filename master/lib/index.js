@@ -34,12 +34,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 const networkConfig = {
-  kafka: { host: "0.0.0.0" },
-  neo4j: { host: "0.0.0.0" },
-  mongodb: { host: "0.0.0.0" },
-  vault: { host: "0.0.0.0" },
-  kube: { host: "0.0.0.0" },
-  registry: { host: "0.0.0.0" }
+  kafka: { host: process.env.KAFKA_HOST || "0.0.0.0" },
+  neo4j: { host: process.env.NEO4J_HOST || "0.0.0.0" },
+  mongodb: { host: process.env.MONGO_HOST || "0.0.0.0" },
+  vault: { host: process.env.VAULT_HOSt || "0.0.0.0" },
+  kube: { host: process.env.KUBERNETES_HOST || "0.0.0.0" },
+  registry: { host: process.env.REGISTRY_HOST || "0.0.0.0" }
 };
 
 const defaultPorts = {
@@ -54,7 +54,9 @@ app.post("/config/:app", (req, res) => {
   const { app } = params;
   networkConfig[app] = body;
   res.send("Configuration received");
-  console.log(chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`));
+  console.log(
+    chalk.yellow(`Network config updated for '${app}': ${JSON.stringify(body)}`)
+  );
 });
 
 const pluginsDestPath = path.resolve(yargs.pluginsDestDir);
@@ -378,15 +380,15 @@ createPluginsDir(err => {
       });
       kafkaConsumer.on("data", data => {
         const value = JSON.parse(data.value.toString());
-        if (data.topic === 'log' && value.source.includes('/var/log/juju/')) {
+        if (data.topic === "log" && value.source.includes("/var/log/juju/")) {
           socket.emit("log", {
             topic: data.topic,
-            time: value['@timestamp'],
-            stream: 'stdout',
+            time: value["@timestamp"],
+            stream: "stdout",
             message: value.message,
-            source: value.source.replace('/var/log/juju/', '')
+            source: value.source.replace("/var/log/juju/", "")
           });
-        } else if (data.topic === 'kube-logs') {
+        } else if (data.topic === "kube-logs") {
           const msg = JSON.parse(value.message);
           socket.emit("log", {
             topic: data.topic,
@@ -408,54 +410,181 @@ createPluginsDir(err => {
           )
         );
         runCommand(data.type, data.args)
-          .then(() => socket.emit("log", {
-            topic: "Master",
-            time: new Date(),
-            stream: "stdout",
-            message: "Command launched",
-            source: "Satellite",
-          })).catch(err => {
+          .then(() =>
+            socket.emit("log", {
+              topic: "Master",
+              time: new Date(),
+              stream: "stdout",
+              message: "Command launched",
+              source: "Satellite"
+            })
+          )
+          .catch(err => {
             console.log(chalk.red(err.toString()));
             return socket.emit("log", {
               topic: "Master",
               time: new Date(),
               stream: "stderr",
               message: `Impossible to the run command: ${err.toString()}`,
-              source: "Satellite",
+              source: "Satellite"
             });
+          });
+      });
+
+      const driver = neo4j.driver(
+        `bolt://${networkConfig.neo4j.host}:${defaultPorts.neo4j.port}`,
+        neo4j.auth.basic("neo4j", "test")
+      );
+      socket.on("meta-profile-create", ({ name }) => {
+        const session = driver.session();
+        session
+          .run(
+            "MERGE (mp:MetaProfil { name: $name }) ON CREATE SET mp.name = $name RETURN mp",
+            { name }
+          )
+          .then(() => {
+            socket.emit("log", {
+              time: new Date(),
+              message: "Meta profile successfully created",
+              source: "Satellite"
+            });
+            session.close();
+          })
+          .catch(err => {
+            socket.emit("log", {
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to create meta profile: ${err.toString()}`,
+              source: "Satellite"
+            });
+            session.close();
+          });
+      });
+
+      socket.on("meta-profile-search", ({ name }) => {
+        const session = driver.session();
+        session
+          .run(
+            `MATCH (mp:MetaProfil)
+              WHERE mp.name CONTAINS $name
+              RETURN mp.name`,
+            { name }
+          )
+          .then(result => {
+            socket.emit("log", {
+              time: new Date(),
+              message: `Results:
+                ${result.records
+                  .map(node => `- ${node.get("mp.name")}`)
+                  .join("\n")}
+              `,
+              source: "Satellite"
+            });
+            session.close();
+          })
+          .catch(err => {
+            socket.emit("log", {
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to search meta profile: ${err.toString()}`,
+              source: "Satellite"
+            });
+            session.close();
+          });
+      });
+
+      socket.on("meta-profile-link", ({ name, accountType, targetString }) => {
+        const session = driver.session();
+        session
+          .run(
+            `MATCH (mp:MetaProfil { name: $name })
+              MATCH (target) WHERE $accountType IN labels(target) AND ANY (property in keys(target) WHERE target[property] = $targetString)
+              MERGE (mp)-[r:HAS_ACCOUNT]->(target)
+              RETURN mp`,
+            { name, accountType, targetString }
+          )
+          .then(() => {
+            socket.emit("log", {
+              time: new Date(),
+              message: "Meta profile successfully linked",
+              source: "Satellite"
+            });
+            session.close();
+          })
+          .catch(err => {
+            socket.emit("log", {
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to link meta profile: ${err.toString()}`,
+              source: "Satellite"
+            });
+            session.close();
+          });
+      });
+
+      socket.on("meta-profile-remove", ({ name }) => {
+        const session = driver.session();
+        session
+          .run("MATCH (mp:MetaProfil { name: $name }) DETACH DELETE mp", {
+            name
+          })
+          .then(() => {
+            socket.emit("log", {
+              time: new Date(),
+              message: "Meta profile successfully removed",
+              source: "Satellite"
+            });
+            session.close();
+          })
+          .catch(err => {
+            socket.emit("log", {
+              time: new Date(),
+              stream: "stderr",
+              message: `Impossible to remove meta profile: ${err.toString()}`,
+              source: "Satellite"
+            });
+            session.close();
           });
       });
 
       socket.on("kubectl", ({ args }) => {
         const kubectl = spawn(KUBECTL_BIN, args);
-        kubectl.stdout.on("data", data => socket.emit("log", {
-          topic: "Master",
-          time: new Date(),
-          stream: "stdout",
-          message: data,
-          source: "Kubectl",
-        }));
-        kubectl.stderr.on("data", data => socket.emit("log", {
-          topic: "Master",
-          time: new Date(),
-          stream: "stderr",
-          message: data,
-          source: "Kubectl",
-        }));
-        kubectl.on("error", error => socket.emit("log", {
-          topic: "Master",
-          time: new Date(),
-          stream: "stdout",
-          message: `Kubectl error: ${error}`,
-          source: "Kubectl",
-        }));
-        return kubectl.on("exit", code => socket.emit("log", {
-          topic: "Master",
-          time: new Date(),
-          stream: "stdout",
-          message: `Kubectl exit with code: ${code}`,
-          source: "Kubectl",
-        }));
+        kubectl.stdout.on("data", data =>
+          socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stdout",
+            message: data,
+            source: "Kubectl"
+          })
+        );
+        kubectl.stderr.on("data", data =>
+          socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stderr",
+            message: data,
+            source: "Kubectl"
+          })
+        );
+        kubectl.on("error", error =>
+          socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stdout",
+            message: `Kubectl error: ${error}`,
+            source: "Kubectl"
+          })
+        );
+        return kubectl.on("exit", code =>
+          socket.emit("log", {
+            topic: "Master",
+            time: new Date(),
+            stream: "stdout",
+            message: `Kubectl exit with code: ${code}`,
+            source: "Kubectl"
+          })
+        );
       });
 
       socket.on("disconnect", function() {
@@ -468,6 +597,7 @@ createPluginsDir(err => {
         io.emit("user disconnected");
 
         kafkaConsumer.disconnect();
+        driver.close();
       });
     });
   }
