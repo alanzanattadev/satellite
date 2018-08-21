@@ -170,6 +170,11 @@ class TwitterAnalysis:
         }
 
     def mapReduceOnEachTweet(self, filter={}):
+        setOfTweet = None
+        if self.clientDest.count() == 0:
+            print(
+                "There is no processed tweet in dest database, run [-p] before!")
+            exit(2)
         setOfTweet = self.clientDest.find(filter)
         profile = {
             "relations": {},
