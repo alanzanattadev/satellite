@@ -18,9 +18,15 @@
 
 ### Run
 
+Get a training set file which is a csv containing on each row:
+
+- spotify user ID
+- personality label (ENFP, INTP, ...)
+
+Put this training set file on a server web or locally.
+
 ```bash
-./get_habits.py [user id] (go on Mobile Spotify App and share a user to get its user id)
-./get_lyrics.py [user id]
-./get_emotions.py [user id]
+./fetch_training_set.sh [trainingSetUri]
+./get_all_for_user.sh [user id] (go on Mobile Spotify App and share a user to get its user id)
 ... [user id]
 ```
