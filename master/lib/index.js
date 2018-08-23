@@ -297,22 +297,50 @@ function compileTemplate(filePath, args) {
   });
 }
 
-function deployOnKubernetes(deploymentFilePath) {
+function deployOnKubernetes(deploymentFilePath, socket) {
   return new Promise((resolve, reject) => {
     const command = `${KUBECTL_BIN} create -f ${deploymentFilePath}`;
     console.log(chalk.cyan(`Executing: ${chalk.yellow(command)} ...`));
     const kubectl = spawn(KUBECTL_BIN, ["create", "-f", deploymentFilePath]);
-    kubectl.stdout.on("data", data =>
-      console.log(`${chalk.cyan("[*]")} ${chalk.yellow(data)}`)
-    );
-    kubectl.stderr.on("data", data =>
-      console.log(`${chalk.cyan("[*]")} ${chalk.yellow(data)}`)
-    );
+    kubectl.stdout.on("data", data => {
+      socket.emit("log", {
+        topic: "Kubectl",
+        time: new Date(),
+        stream: "stdout",
+        message: data,
+        source: "Kubectl"
+      });
+      console.log(`${chalk.cyan("[*]")} ${chalk.yellow(data)}`);
+    });
+    kubectl.stderr.on("data", data => {
+      socket.emit("log", {
+        topic: "Kubectl",
+        time: new Date(),
+        stream: "stderr",
+        message: data,
+        source: "Kubectl"
+      });
+      console.log(`${chalk.cyan("[*]")} ${chalk.yellow(data)}`);
+    });
     kubectl.on("error", err => {
+      socket.emit("log", {
+        topic: "Kubectl",
+        time: new Date(),
+        stream: "stderr",
+        message: err,
+        source: "Kubectl"
+      });
       console.log(chalk.red(err));
       reject(err);
     });
     kubectl.on("exit", code => {
+      socket.emit("log", {
+        topic: "Kubectl",
+        time: new Date(),
+        stream: "stdout",
+        message: `Kubectl has exited with code: ${code}`,
+        source: "Kubectl"
+      });
       if (code === 0) {
         console.log(chalk.green("Kubectl finished."));
         resolve();
@@ -324,10 +352,10 @@ function deployOnKubernetes(deploymentFilePath) {
   });
 }
 
-function runCommand(command, args) {
+function runCommand(command, args, socket) {
   return getDeploymentFileFromCommand(command)
     .then(filePath => compileTemplate(filePath, args))
-    .then(deploymentFilePath => deployOnKubernetes(deploymentFilePath));
+    .then(deploymentFilePath => deployOnKubernetes(deploymentFilePath, socket));
 }
 
 createPluginsDir(err => {
@@ -409,7 +437,7 @@ createPluginsDir(err => {
             )}" with args ${JSON.stringify(data.args)}`
           )
         );
-        runCommand(data.type, data.args)
+        runCommand(data.type, data.args, socket)
           .then(() =>
             socket.emit("log", {
               topic: "Master",
