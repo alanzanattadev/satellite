@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
         - name: happn-location-{{ uuid }}
-          image: happn-location
+          image: "{{ registry_host }}:{{ registry_port }}/happn-locations"
           env:
             - name: NEO4J_URL
               value: "bolt://{{ neo4j_host }}:{{ neo4j_port }}"
