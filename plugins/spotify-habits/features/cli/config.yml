@@ -3,5 +3,5 @@
   kubernetes-file: get_all_for_user.yml
 
 - configuration: f16p <trainingSet>
-  description: Fetch training set from trainingSet file (http or local file)
+  description: Fetch training set from trainingSet csv (spotifyAccountID, Personality label (ENTP, ...)) file (http or local file)
   kubernetes-file: fetch_training_set.yml
