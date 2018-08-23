@@ -1,4 +1,4 @@
-# satellite
+# Satellite
 
 ## Install
 
@@ -6,13 +6,25 @@
 
 - Download and install Ubuntu 18.04 LTS
 - `snap install satellite`
-- `satellite.deploy` and follow instructions
+- `satellite.deploy` and follow instructions (it takes about one hour)
 
 You can monitor units with `juju status` or via the web gui with `juju gui`.
 
 #### Troubleshooting
 
-- Cluster kubernetes down: juju destroy-model [TAB TAB]
+- `satellite.clean` to remove the deployed infrastructure.
+
+## CLI Usage
+
+```shell
+$> satellite.cli --help
+Options:
+  --help        Show help                                              [boolean]
+  --version     Show version number                                    [boolean]
+  --server, -s                                            [default: "localhost"]
+  --port, -p                                                       [default: 80]
+  --protocol                                                   [default: "http"]
+```
 
 ## Plugin creation
 
@@ -115,16 +127,16 @@ Reload master to reload the plugin
 
 ### Install
 
-run `snap install satellite`
+Run `snap install satellite`
 
 ### Start: Deploy
 
-run `satellite.deploy`
+Run `satellite.deploy`
 
 The master IP will be displayed at the end.
 We'll use it as "$ip"
 
-run `satellite.cli -s $ip`
+Run `satellite.cli -s $ip`
 
 ### Use
 
@@ -137,42 +149,42 @@ You have access to a visualizer on http://localhost:9123/ (on the same machine a
 
 ### Code: CLI
 
-- install nodejs yarn
-- cd into cli
-- `yarn`
-- launch CLI with `yarn start -s $ip`
+- Install nodejs yarn, https://yarnpkg.com/fr/docs/install
+- Go into the `cli` folder
+- Launch the  `yarn` command
+- Launch CLI with `yarn start -s $ip -p $port` (`$ip` is the satellite master ip address and `$port` the port)
 
 ### Code: Master
 
-- install build-essentials python librdkafka-dev nodejs yarn
-- cd into master folder
-- code
-- `docker build -t satellite-master .`
-- `juju status`
-- get the docker registry ip
-- `docker push ip:5000/satellite-master`
-- `juju charm-upgrade smaster`
+- Install dependencies: `sudo apt install build-essential python librdkafka-dev`
+- Install nodejs yarn, https://yarnpkg.com/fr/docs/install
+- Go into the `master` folder
+
+To build and redeploy:
+
+- `docker build -t smaster .`
+- Get the docker registry ip with `juju status`
+- `docker tag smaster ip:5000/smaster`
+- `docker push ip:5000/smaster`
+- `juju remove-machine <smaster machine id> --force`
+- `juju remove-application smaster`
+- See the `deploy.sh` script to redeploy the smaster charm
 
 Troubleshoot with:
 
-- `juju ssh smaster`
-- `docker logs $(docker ps -q)`
+- `juju ssh smaster/0`
+- `sudo docker logs $(docker ps -q)` or `sudo cat /var/log/juju/unit*.log`
 
-### Code: Plugin configuration
+### Code: Plugin
 
-- `juju status`
-- cd into plugin directory
-- code scripts you need, and give them the IPs they need for MongoDB and Neo4J
-- code and iterate by starting them manually
-- `docker build -t pluginname .`
-- `docker push ip:5000/pluginname`
-- launch the CLI with `satellite.cli -s $ip`
-- run `load plugin ./`
-- exec the plugin commands
-- see the output on the CLI
-- modify the configuration
-- run `load plugin ./` again
-- reexec the plugin commands
+- Go into the `plugins` folder
+- Code scripts you need, and update the deployment configuration
+- `docker build -t <pluginname> .`
+- `docker tag <pluginname> ip:5000/<pluginname>`
+- `docker push ip:5000/<pluginname>`
+- Launch the CLI with `satellite.cli -s $ip -p $port` (`$ip` is the satellite master ip address and `$port` the port)
+- Run `load plugin ./`
+- Test the plugin commands
 
 ### Code: Plugin code
 
@@ -193,12 +205,12 @@ This is the iteration loop
 ### Code: Deployment
 
 - `./deploy.sh`
-- check if everything works with juju status
-- try to use it
-- modify deployment code
+- Check if everything works with juju status
+- Try to use it
+- Modify deployment code
 - `./clean.sh`
-- iterate
+- Iterate
 
 ### End: Clean
 
-run `satellite.clean`
+Run `satellite.clean`
