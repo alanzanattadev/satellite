@@ -7,7 +7,7 @@ spec:
   template:
     metadata:
       labels:
-        app: spotify-habits
+        app: spotify-habits-fetch-training-set
     spec:
       containers:
         - name: spotify-habits-fetch-training-set-{{ uuid }}

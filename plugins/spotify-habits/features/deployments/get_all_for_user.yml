@@ -7,7 +7,7 @@ spec:
   template:
     metadata:
       labels:
-        app: spotify-habits
+        app: spotify-habits-get-all-for-user
     spec:
       containers:
         - name: spotify-habits-get-all-for-user-{{ username }}
