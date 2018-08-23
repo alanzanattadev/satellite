@@ -1,5 +1,13 @@
 # Satellite
 
+Satellite is a scalable Open Source Intelligence platorm for security researchers who are looking for an easy to use plugin system. Satellite allows you to create in minutes a module that will run on a Kubernetes based cluster and be launchable from a user-friendly Command Line Interactive tool.
+
+This module will have access to a ready to use infrastructure containing MongoDB, Kafka, Neo4J and be run on Kubernetes.
+
+Satellite gives you access to MongoDB for cache data storage and Neo4J for the result graph. The CLI allows you to visualize easily the data stored in Neo4J.
+
+![Diagram](./diagram.jpg)
+
 ## Install
 
 ### Operating System
@@ -151,7 +159,7 @@ You have access to a visualizer on http://localhost:9123/ (on the same machine a
 
 - Install nodejs yarn, https://yarnpkg.com/fr/docs/install
 - Go into the `cli` folder
-- Launch the  `yarn` command
+- Launch the `yarn` command
 - Launch CLI with `yarn start -s $ip -p $port` (`$ip` is the satellite master ip address and `$port` the port)
 
 ### Code: Master
