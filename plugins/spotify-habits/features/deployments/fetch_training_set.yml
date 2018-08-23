@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: spotify-habits-get-all-for-user-{{ username }}
+  name: spotify-habits-fetch-training-set-{{ uuid }}
 spec:
   template:
     metadata:
@@ -10,9 +10,9 @@ spec:
         app: spotify-habits
     spec:
       containers:
-        - name: spotify-habits-get-all-for-user-{{ username }}
+        - name: spotify-habits-fetch-training-set-{{ uuid }}
           image: "{{ registry_host }}:{{ registry_port }}/spotify-habits"
-          args: ["./get_all_for_user.sh", "{{ username }}"]
+          args: ["./fetch_training_set.py", "{{ trainingSet }}"]
           env:
             - name: NEO4J_HOST
               value: "{{ neo4j_host }}"

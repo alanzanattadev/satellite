@@ -2,22 +2,6 @@
   description: Predict 16personalities profile of username
   kubernetes-file: get_all_for_user.yml
 
-- configuration: gmh <username>
-  description: Fetch music habits of username
-  kubernetes-file: get_habits.yml
-
-- configuration: gml <username>
-  description: get lyrics of username songs
-  kubernetes-file: get_lyrics.yml
-
-- configuration: gme <username>
-  description: get emotions of username songs lyrics
-  kubernetes-file: get_emotions.yml
-
-- configuration: gmf <username>
-  description: get audio features of username songs
-  kubernetes-file: get_audio_features.yml
-
-- configuration: s16pts
-  description: set 16personalities training set
-  kubernetes-file: set_training_set_16personalities.yml
+- configuration: f16p <trainingSet>
+  description: Fetch training set from trainingSet file (http or local file)
+  kubernetes-file: fetch_training_set.yml
