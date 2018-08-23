@@ -2,7 +2,9 @@
 
 import argparse
 from main import TwitterAnalysis
+from utils import fromInt64ToInt
 from graph import GraphDB
+import json
 
 
 def main():
@@ -23,6 +25,7 @@ def main():
     if args.graph and dataProfile:
         graph = GraphDB(dataProfile)
         graph.fetchNodesRelatedProfile()
+    print(json.dumps(dataProfile, default=fromInt64ToInt))
 
 
 if __name__ == "__main__":

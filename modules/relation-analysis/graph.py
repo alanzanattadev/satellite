@@ -3,6 +3,7 @@
 import os
 from neo4j.v1 import GraphDatabase
 import datetime
+from utils import fromUtf8ToAscii
 
 
 class GraphDB:
@@ -13,7 +14,7 @@ class GraphDB:
         self.driver = GraphDatabase.driver(
             self.uri, auth=(self.user, self.password))
         self.profile = profileAfterProcess
-        self.owner = profileAfterProcess["profileUser"]
+        self.owner = fromUtf8ToAscii(profileAfterProcess["profileUser"])
         self.createOneNodeRelation(
             self.owner, "Log: Creation of mother User...")
         self.fetchNodesLanguage()
@@ -21,29 +22,33 @@ class GraphDB:
     def createOneNodeRelation(self, name, msglog):
         with self.driver.session() as session:
             print(msglog)
-            return session.run("CREATE (a:Person {name: $name})", name=name)
-
-    def createRelationUser(self, user, data):
-        with self.driver.session() as session:
-            print("Log: Creation of User relation " + user)
-            return session.run("MATCH (a:Person) WHERE a.name = $nameA CREATE (b:Person {name: $nameB})-[r:RELATION {interactions: $interac, first_interaction: $firstI}]->(a)", nameA=self.owner, nameB=user, interac=data["count"], firstI=data["first_interac"].strftime("%d/%m/%Y"))
+            return session.run("MERGE (a:TwitterAccount {name: $name}) ON CREATE SET a.name = $name", name=fromUtf8ToAscii(name))
 
     def createNodeLang(self, lang, data):
         with self.driver.session() as session:
             print("Log: Creation of Lang node " + lang)
-            return session.run("CREATE (a:Language {name: $lang, used: $data})", lang=lang, data=data)
+            return session.run("MERGE (a:Language {name: $lang, nbOfUse: $nbOfUse}) ON CREATE SET a.name = $lang ON CREATE SET a.nbOfUse = $nbOfUse", lang=fromUtf8ToAscii(lang), nbOfUse=data)
 
-    def createRelationLangToUsers(self, user, langUsed):
-        with self.driver.session() as session:
-            print("Log: Creation of RelationShip between Lang and User")
-            for lang in langUsed:
-                session.run(
-                    "MATCH (a:Person),(b:Language) WHERE a.name = $user AND b.name = $lang CREATE (a)-[r:RELANG]->(b)", user=user, lang=lang)
+    @staticmethod
+    def createRelationUser(tx, user, data, owner):
+        print("Log: Creation of User relation " +
+              fromUtf8ToAscii(user))
+        return tx.run("MATCH (a:TwitterAccount) WHERE a.name = $nameA MERGE (b:TwitterAccount {name: $nameB})-[r:RELATION {interactions: $interac, first_interaction: $firstI}]->(a) ON CREATE SET b.name = $nameB", nameA=owner, nameB=fromUtf8ToAscii(user), interac=data["count"], firstI=data["first_interac"])
+
+    @staticmethod
+    def createRelationLangToUsers(tx, user, lang):
+        print("Log: Creation of RelationShip between Lang and User")
+        return tx.run(
+            "MATCH (a:TwitterAccount),(b:Language) WHERE a.name = $user AND b.name = $lang MERGE (a)-[r:RELANG]->(b)", user=fromUtf8ToAscii(user), lang=fromUtf8ToAscii(lang))
 
     def fetchNodesRelatedProfile(self):
-        for user, data in self.profile["relations"].items():
-            self.createRelationUser(user, data)
-            self.createRelationLangToUsers(user, data["langs"])
+        with self.driver.session() as session:
+            for user, data in self.profile["relations"].items():
+                session.write_transaction(
+                    self.createRelationUser, user, data, self.owner)
+                for lang in data["langs"]:
+                    session.write_transaction(
+                        self.createRelationLangToUsers, user, lang)
 
     def fetchNodesLanguage(self):
         for lang, amount in self.profile["language"].items():

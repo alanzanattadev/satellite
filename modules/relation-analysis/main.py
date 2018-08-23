@@ -8,30 +8,35 @@ import pandas as pd
 import os
 import re
 import collections
+import json
+from utils import fromInt64ToInt
 
 
 class TwitterAnalysis:
     def __init__(self, ownerOfTheSetOfTweet, filterOnTwit={}):
         self.owner = ownerOfTheSetOfTweet
         self.clientSource = self.setUpDb(
-            "MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "MONGO_TWITTER_COLLECTION")
+            "MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "twitter_collection-"+ownerOfTheSetOfTweet)
         self.clientDest = self.setUpDb(
-            "MONGO_HOST_DEST", "MONGO_PORT_DEST", "MONGO_TWITTER_DATABASE_DEST", "MONGO_TWITTER_COLLECTION_DEST", "twitter_analysis")
+            "MONGO_HOST_DEST" or "MONGO_HOST", "MONGO_PORT_DEST", "MONGO_TWITTER_DATABASE_DEST", "twitter_collection_dest-"+ownerOfTheSetOfTweet)
         self.data = self.getDataFromDb(filterOnTwit)
 
-    def setUpDb(self, host, port, db, collection, dev="twitter_collection"):
+    def setUpDb(self, host, port, db, collection):
         try:
-            mongo_host = os.environ.get(host, "localhost")
+            mongo_host = os.environ.get(
+                host, os.environ.get("MONGO_HOST", "localhost"))
             mongo_port = os.environ.get(port, 27017)
             mongo_database = os.environ.get(
                 db, "twitter_database")
-            mongo_collection = os.environ.get(
-                collection, dev)
             client = MongoClient(mongo_host, mongo_port)[
-                mongo_database][mongo_collection]
+                mongo_database][collection]
+            if collection == "twitter_collection-"+self.owner and client.count() == 0:
+                raise Exception(
+                    "There is no data in the source database: " + collection)
             return client
         except Exception as err:
-            print("Error when connecting to SOURCE database: " + err)
+            print("Error when connecting to SOURCE database: " + str(err))
+            exit(2)
 
     def getDataFromDb(self, filter):
         return self.clientSource.find(filter)
@@ -90,11 +95,11 @@ class TwitterAnalysis:
             if not ownerOfTweet in object["relations"]:
                 object["relations"][ownerOfTweet] = {}
                 object["relations"][ownerOfTweet].update(
-                    {"count": 1, "first_interac": date, "langs": [lang]})
+                    {"count": 1, "first_interac": date.strftime("%Y-%m-%d"), "langs": [lang]})
             else:
                 path = object["relations"][ownerOfTweet]
                 path.update(
-                    {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date)})
+                    {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date.strftime("%Y-%m-%d"))})
                 if not lang in path["langs"]:
                     path["langs"].append(lang)
 
@@ -106,11 +111,11 @@ class TwitterAnalysis:
                 if not tag_user in object["relations"]:
                     object["relations"][tag_user] = {}
                     object["relations"][tag_user].update(
-                        {"count": 1, "first_interac": date, "langs": [lang]})
+                        {"count": 1, "first_interac": date.strftime("%Y-%m-%d"), "langs": [lang]})
                 else:
                     path = object["relations"][tag_user]
                     path.update(
-                        {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date)})
+                        {"count": path["count"] + 1, "first_interac": min(path["first_interac"], date.strftime("%Y-%m-%d"))})
                     if not lang in path["langs"]:
                         path["langs"].append(lang)
 
@@ -165,6 +170,11 @@ class TwitterAnalysis:
         }
 
     def mapReduceOnEachTweet(self, filter={}):
+        setOfTweet = None
+        if self.clientDest.count() == 0:
+            print(
+                "There is no processed tweet in dest database, run [-p] before!")
+            exit(2)
         setOfTweet = self.clientDest.find(filter)
         profile = {
             "relations": {},
@@ -192,4 +202,7 @@ class TwitterAnalysis:
         self.analysisByTime(profile["tweetPerDay"], timeSet)
         df = self.createDfBasedOnTime(timeSet)
         profile["analysisDataFrame"] = df
+        self.setUpDb("MONGO_HOST", "MONGO_PORT", "MONGO_TWITTER_DATABASE", "twitter_collection_res-" +
+                     self.owner).replace_one({"_id": 1}, {"result": json.dumps(profile, default=fromInt64ToInt)}, upsert=True)
+        print("INFO: Inserted total result of your profile, at: twitter_collection_res-"+self.owner)
         return profile
