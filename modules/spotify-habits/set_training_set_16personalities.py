@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # Fetch csv
     if len(sys.argv) > 1:
         if sys.argv[1].startswith("http://"):
-            with urllib.request.urlopen('http://python.org/') as response:
+            with urllib.request.urlopen(sys.argv[1]) as response:
                 with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
                     shutil.copyfileobj(response, tmp_file)
                     trainingFile = tmp_file.name
