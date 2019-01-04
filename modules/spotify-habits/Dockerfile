@@ -1,4 +1,4 @@
-FROM petronetto/docker-python-deep-learning
+FROM tensorflow/tensorflow:1.10.1-py3
 
 WORKDIR /usr/src/spotify-habits
 RUN pip install -U pip

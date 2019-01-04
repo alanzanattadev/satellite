@@ -32,7 +32,7 @@ def fetch_emotions_for_user(username, songs_collection, lyrics_collection, emoti
                     conn.request("GET", "/api/?" + params)
                     response = conn.getresponse()
                     data = response.read()
-                    content = json.loads(data)
+                    content = json.loads(data.decode("utf-8"))
                     emotions = []
                     for entry in content['entries']:
                         for emotion in entry['emotions']:
